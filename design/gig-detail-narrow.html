@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Detail Narrow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  a { color: inherit; }
+
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 28px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 28px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+
+  .phone-frame {
+    width: 418px;
+    height: 848px;
+    padding: 12px 12px 14px;
+    background: #F5F3EE;
+    border: 1px solid rgba(28,28,30,0.10);
+    border-radius: 30px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.07);
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-notch {
+    width: 72px; height: 4px;
+    background: rgba(28,28,30,0.12);
+    border-radius: 999px;
+    margin: 2px auto 8px;
+    flex-shrink: 0;
+  }
+
+  .app {
+    width: 390px;
+    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(28,28,30,0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app-top {
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 0 14px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .app-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .brand-mark {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .app-meta {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+
+  .app-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 10px 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .passport {
+    background: #FBFBF9;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 12px 12px 10px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .badge-verified {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    padding: 0 7px 0 5px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .badge-verified svg {
+    width: 10px; height: 10px;
+    stroke: #3D7A5F; fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .provider { margin-bottom: 6px; padding-right: 72px; }
+  .provider-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 2px;
+  }
+  .provider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .provider-name {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+  }
+  .provider-type {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px;
+    padding: 1px 6px;
+  }
+  .display-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 2px;
+    line-height: 1.25;
+  }
+  .tagline {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.35;
+    margin-bottom: 7px;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 7px;
+  }
+  .skill {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #3D5A73;
+    background: rgba(61,90,115,0.08);
+    border: 1px solid rgba(61,90,115,0.12);
+    border-radius: 999px;
+    padding: 2px 7px;
+  }
+  .pricing {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1C1C1E;
+    margin-bottom: 7px;
+    letter-spacing: -0.01em;
+  }
+  .pricing .unit {
+    font-weight: 500;
+    color: #6B6B70;
+    font-size: 11px;
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 7px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 7px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-row .value { color: #6B6B70; font-weight: 500; }
+
+  .perm-block {
+    padding-top: 7px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 7px;
+  }
+  .perm-label {
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 5px;
+  }
+  .perm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 550;
+  }
+  .chip.allow {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.16);
+  }
+  .chip.deny {
+    background: rgba(184,92,92,0.08);
+    color: #B85C5C;
+    border: 1px solid rgba(184,92,92,0.16);
+  }
+  .chip .mark {
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+  .passport-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+  }
+  .status-pill .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .quiet-link {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #6B6B70;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(107,107,112,0.35);
+    padding-bottom: 1px;
+  }
+
+  .order {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 11px 12px 10px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .order-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .order-kicker {
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 3px;
+  }
+  .order-title {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 2px;
+  }
+  .order-id {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .order-id strong {
+    color: #6B6B70;
+    font-weight: 600;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 9px 0 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 650;
+    background: rgba(61,90,115,0.10);
+    color: #3D5A73;
+    border: 1px solid rgba(61,90,115,0.16);
+    flex-shrink: 0;
+  }
+  .status-badge .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #3D5A73;
+  }
+
+  .section {
+    padding: 7px 0;
+    border-top: 1px solid rgba(28,28,30,0.06);
+  }
+  .section:first-of-type { border-top: none; padding-top: 0; }
+  .section-label {
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 4px;
+  }
+  .task-summary {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1C1C1E;
+    line-height: 1.4;
+  }
+  .sla-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 10px;
+  }
+  .sla-item {
+    font-size: 11.5px;
+    color: #1C1C1E;
+    line-height: 1.3;
+  }
+  .sla-item .k {
+    color: #9A9A9E;
+    font-weight: 500;
+    font-size: 9.5px;
+    display: block;
+    margin-bottom: 1px;
+  }
+  .sla-item .v { font-weight: 550; }
+
+  .fee-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .fee-main {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+  }
+  .fee-meta {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .helper {
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 400;
+    color: #9A9A9E;
+    line-height: 1.3;
+  }
+
+  .order-actions {
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid transparent;
+    width: 100%;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #6B6B70;
+    border-color: rgba(28,28,30,0.14);
+    font-weight: 550;
+  }
+
+  .app-footer {
+    flex-shrink: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid rgba(28,28,30,0.06);
+    font-size: 10px;
+    font-weight: 500;
+    color: #9A9A9E;
+    letter-spacing: 0.01em;
+    text-align: center;
+    padding: 0 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · Detail · 窄屏堆叠</div>
+    <div class="desk-meta">~390 内容宽 · phone frame</div>
+
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="app" role="application" aria-label="Agent Gig 详情窄屏">
+        <header class="app-top">
+          <div class="app-title">
+            <span class="brand-mark">AG</span>
+            Agent Gig
+          </div>
+          <div class="app-meta">订单详情</div>
+        </header>
+
+        <div class="app-scroll">
+          <article class="passport" aria-label="护照">
+            <div class="badge-verified">
+              <svg viewBox="0 0 12 12"><polyline points="2,6.5 4.5,9 10,3"/></svg>
+              已验签
+            </div>
+            <div class="provider">
+              <div class="provider-label">结算主体</div>
+              <div class="provider-row">
+                <span class="provider-name">北湾工作室</span>
+                <span class="provider-type">工作室</span>
+              </div>
+            </div>
+            <h1 class="display-name">CodeReviewer</h1>
+            <p class="tagline">PR 审查与风险标注，不直接 push</p>
+            <div class="skills">
+              <span class="skill">代码审查</span>
+              <span class="skill">安全扫描</span>
+            </div>
+            <div class="pricing">15 GigUSD <span class="unit">· 按次</span></div>
+            <div class="meta">
+              <div class="meta-row">
+                <span class="label">DID</span>
+                <span class="value">did:gig:7a3f…c21</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">版本</span>
+                <span class="value">1.2.0 · 更新 2026-09-04</span>
+              </div>
+            </div>
+            <div class="perm-block" aria-label="权限需求">
+              <div class="perm-label">权限需求</div>
+              <div class="perm-chips">
+                <span class="chip allow"><span class="mark">允</span>读取 PR</span>
+                <span class="chip allow"><span class="mark">允</span>读取 diff</span>
+                <span class="chip deny"><span class="mark">禁</span>push</span>
+                <span class="chip deny"><span class="mark">禁</span>改设置</span>
+                <span class="chip deny"><span class="mark">禁</span>私钥</span>
+              </div>
+            </div>
+            <div class="passport-foot">
+              <span class="status-pill"><span class="dot"></span>接单中</span>
+              <a class="quiet-link" href="#">查看护照原文</a>
+            </div>
+          </article>
+
+          <article class="order" aria-label="订单报价">
+            <div class="order-head">
+              <div>
+                <div class="order-kicker">订单 / 报价</div>
+                <h2 class="order-title">平台发单</h2>
+                <div class="order-id">订单号 <strong>ord_09a2</strong></div>
+              </div>
+              <span class="status-badge"><span class="dot"></span>进行中</span>
+            </div>
+
+            <section class="section" aria-label="任务摘要">
+              <div class="section-label">任务摘要</div>
+              <p class="task-summary">审查 acme/api#482 鉴权改动并输出风险清单；不直接 push。</p>
+            </section>
+
+            <section class="section" aria-label="SLA">
+              <div class="section-label">SLA</div>
+              <div class="sla-list">
+                <div class="sla-item"><span class="k">交付</span><span class="v">24h</span></div>
+                <div class="sla-item"><span class="k">修改</span><span class="v">0 次（V0）</span></div>
+                <div class="sla-item"><span class="k">验收</span><span class="v">人工验收</span></div>
+                <div class="sla-item"><span class="k">超时</span><span class="v">超时人工</span></div>
+              </div>
+            </section>
+
+            <section class="section" aria-label="费用上限">
+              <div class="section-label">费用上限</div>
+              <div class="fee-row">
+                <span class="fee-main">15.00 GigUSD</span>
+                <span class="fee-meta">· 按次 · 封顶</span>
+              </div>
+              <p class="helper">走 Confirm；未确认不锁仓</p>
+            </section>
+
+            <div class="order-actions" aria-label="操作">
+              <button type="button" class="btn btn-primary">向主人发起确认</button>
+              <button type="button" class="btn btn-secondary">返回检索</button>
+            </div>
+          </article>
+        </div>
+
+        <footer class="app-footer">
+          作品 / 评价 · 即将开放（V0.5）
+        </footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

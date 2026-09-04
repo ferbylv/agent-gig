@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Passport Tokens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    width: 1440px; height: 900px;
+    padding: 48px 56px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  .header .sub {
+    font-size: 13px;
+    color: #6B6B70;
+    font-weight: 500;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1.15fr 0.95fr;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+  }
+  .panel {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.05);
+    padding: 24px 24px 22px;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel h2 {
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6B6B70;
+    margin-bottom: 18px;
+  }
+  /* Swatches */
+  .swatches { display: flex; flex-direction: column; gap: 12px; }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .swatch .chip {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.08);
+    flex-shrink: 0;
+  }
+  .swatch .meta { display: flex; flex-direction: column; gap: 2px; }
+  .swatch .name { font-size: 14px; font-weight: 600; color: #1C1C1E; }
+  .swatch .hex { font-size: 12px; font-weight: 500; color: #9A9A9E; font-variant-numeric: tabular-nums; }
+  .swatch .role { font-size: 11px; color: #6B6B70; }
+  .surface-note {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    font-size: 11px;
+    color: #9A9A9E;
+    line-height: 1.5;
+  }
+  .surface-note strong { color: #6B6B70; font-weight: 600; }
+  /* Hierarchy */
+  .hierarchy { display: flex; flex-direction: column; gap: 0; }
+  .h-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: rgba(28,28,30,0.025);
+    border: 1px solid rgba(28,28,30,0.06);
+  }
+  .h-row .rank {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .h-row .field { font-size: 14px; font-weight: 600; color: #1C1C1E; }
+  .h-row .sample { font-size: 12px; color: #6B6B70; margin-left: auto; text-align: right; max-width: 55%; }
+  .h-row.r1 { background: rgba(61,90,115,0.07); border-color: rgba(61,90,115,0.14); }
+  .h-row.r1 .rank { background: #3D5A73; }
+  .h-row.r2 .rank { background: #4A6A82; }
+  .h-row.r3 .rank { background: #6B6B70; }
+  .h-row.r4 .rank { background: #9A9A9E; }
+  .h-row.r5 .rank { background: #9A9A9E; }
+  .h-row.r6 .rank { background: #B0B0B4; font-size: 10px; }
+  .h-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #6B6B70;
+    line-height: 1.5;
+  }
+  /* Do / Don't */
+  .rules { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .rule {
+    border-radius: 8px;
+    padding: 14px 14px 12px;
+    border: 1px solid rgba(28,28,30,0.08);
+  }
+  .rule.do {
+    background: rgba(61,122,95,0.06);
+    border-color: rgba(61,122,95,0.18);
+  }
+  .rule.dont {
+    background: rgba(184,92,92,0.06);
+    border-color: rgba(184,92,92,0.18);
+  }
+  .rule .tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .rule.do .tag { color: #3D7A5F; }
+  .rule.dont .tag { color: #B85C5C; }
+  .rule ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .rule li {
+    font-size: 13px;
+    color: #1C1C1E;
+    line-height: 1.4;
+    padding-left: 14px;
+    position: relative;
+  }
+  .rule li::before {
+    content: "·";
+    position: absolute;
+    left: 2px;
+    color: #6B6B70;
+    font-weight: 700;
+  }
+  .revoked-inset {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: rgba(28,28,30,0.03);
+    border: 1px dashed rgba(28,28,30,0.14);
+    border-radius: 8px;
+  }
+  .stamp {
+    width: 72px; height: 72px;
+    border-radius: 8px;
+    border: 2px solid rgba(184,92,92,0.55);
+    color: #B85C5C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transform: rotate(-12deg);
+    background: rgba(184,92,92,0.06);
+    flex-shrink: 0;
+  }
+  .revoked-copy {
+    font-size: 12px;
+    color: #6B6B70;
+    line-height: 1.45;
+  }
+  .revoked-copy strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <h1>Agent Gig · Passport Visual Tokens</h1>
+      <div class="sub">V0 · Labor marketplace / ID document · GigUSD = unit label only</div>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <h2>Color · Status & Ink</h2>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="chip" style="background:#3D7A5F"></div>
+            <div class="meta">
+              <div class="name">Verified</div>
+              <div class="hex">#3D7A5F</div>
+              <div class="role">已验签 · active pill</div>
+            </div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background:#B85C5C"></div>
+            <div class="meta">
+              <div class="name">Fail / Danger</div>
+              <div class="hex">#B85C5C</div>
+              <div class="role">签名无效 · revoked stamp</div>
+            </div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background:#A67C52"></div>
+            <div class="meta">
+              <div class="name">Paused</div>
+              <div class="hex">#A67C52</div>
+              <div class="role">已暂停 · helper strip</div>
+            </div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background:#3D5A73"></div>
+            <div class="meta">
+              <div class="name">Action / Slate</div>
+              <div class="hex">#3D5A73</div>
+              <div class="role">skills · restrained accent</div>
+            </div>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background:#1C1C1E"></div>
+            <div class="meta">
+              <div class="name">Ink</div>
+              <div class="hex">#1C1C1E</div>
+              <div class="role">primary text · borders @ 8%</div>
+            </div>
+          </div>
+        </div>
+        <div class="surface-note">
+          <strong>Surfaces</strong> · desk #EDEAE4 · page #FFFFFF<br/>
+          Secondary #6B6B70 · Tertiary #9A9A9E · Radius card 14 / control 8 / pill 999
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Field Hierarchy</h2>
+        <div class="hierarchy">
+          <div class="h-row r1">
+            <span class="rank">1</span>
+            <span class="field">Provider · 结算主体</span>
+            <span class="sample">北湾工作室 · 工作室</span>
+          </div>
+          <div class="h-row r2">
+            <span class="rank">2</span>
+            <span class="field">displayName</span>
+            <span class="sample">CodeReviewer · 20/600</span>
+          </div>
+          <div class="h-row r3">
+            <span class="rank">3</span>
+            <span class="field">tagline</span>
+            <span class="sample">PR 审查与风险标注…</span>
+          </div>
+          <div class="h-row r4">
+            <span class="rank">4</span>
+            <span class="field">skills</span>
+            <span class="sample">代码审查 · 安全扫描</span>
+          </div>
+          <div class="h-row r5">
+            <span class="rank">5</span>
+            <span class="field">pricing</span>
+            <span class="sample">15 GigUSD · 按次</span>
+          </div>
+          <div class="h-row r6">
+            <span class="rank">6</span>
+            <span class="field">DID / version</span>
+            <span class="sample">did:gig:7a3f…c21 · 1.2.0</span>
+          </div>
+        </div>
+        <p class="h-note">Provider legal entity must outweigh nickname. Card = identity document, not checkout.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Do / Don’t</h2>
+        <div class="rules">
+          <div class="rule do">
+            <div class="tag">Do</div>
+            <ul>
+              <li>Soft document shadow, muted badges</li>
+              <li>Quiet secondary: 查看详情</li>
+              <li>GigUSD as unit label only</li>
+              <li>Verified check thin &amp; green-muted</li>
+            </ul>
+          </div>
+          <div class="rule dont">
+            <div class="tag">Don’t</div>
+            <ul>
+              <li>No coin icons / charts / APY</li>
+              <li>No neon green or gold piles</li>
+              <li>No「雇佣并付款」on card</li>
+              <li>名片 ≠ 授权 · no hire CTA</li>
+            </ul>
+          </div>
+          <div class="revoked-inset">
+            <div class="stamp">已吊销</div>
+            <div class="revoked-copy">
+              <strong>Revoked inset</strong>
+              此挂牌已吊销，不可接单
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

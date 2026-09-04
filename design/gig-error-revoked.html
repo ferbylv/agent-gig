@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Revoked</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 48px; left: 56px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+
+  .err-card {
+    width: 440px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.06),
+      0 24px 48px rgba(28,28,30,0.04);
+    padding: 36px 28px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stamp {
+    position: absolute;
+    top: 28px; right: -18px;
+    transform: rotate(18deg);
+    border: 2.5px solid rgba(184,92,92,0.45);
+    color: rgba(184,92,92,0.55);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 4px;
+    background: rgba(184,92,92,0.04);
+    pointer-events: none;
+    user-select: none;
+  }
+  .icon {
+    width: 48px; height: 48px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .icon svg {
+    width: 22px; height: 22px;
+    stroke: #B85C5C; fill: none;
+    stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.85;
+  }
+  .card-title {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+  .card-hint {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+    margin-bottom: 24px;
+  }
+  .muted-meta {
+    font-size: 12px;
+    color: #9A9A9E;
+    margin-bottom: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 132px;
+    padding: 0 22px;
+    border-radius: 8px;
+    background: transparent;
+    color: #3D5A73;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid rgba(61,90,115,0.28);
+    cursor: default;
+  }
+
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · D-MVP-2 · 已吊销</div>
+
+    <div class="err-card" role="alert">
+      <div class="stamp">REVOKED</div>
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5"/><line x1="7.5" y1="7.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="7.5" x2="7.5" y2="14.5"/></svg>
+      </div>
+      <div class="card-title">此挂牌已吊销，不可接单</div>
+      <p class="card-hint">平台已将该护照移出可雇佣目录。详情深链仍可读，但不可发起新单。</p>
+      <span class="status-pill">listingStatus = revoked</span>
+      <div class="muted-meta">did:gig:7a3f…c21 · CodeReviewer · 北湾工作室</div>
+      <button type="button" class="btn-secondary">返回检索</button>
+    </div>
+
+  </div>
+</body>
+</html>

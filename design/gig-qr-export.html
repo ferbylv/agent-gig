@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — QR Export</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 48px; left: 56px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+
+  .export-card {
+    width: 520px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.06),
+      0 24px 48px rgba(28,28,30,0.04);
+    padding: 32px 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .poster-kicker {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 18px;
+    align-self: flex-start;
+  }
+  .qr-frame {
+    width: 220px; height: 220px;
+    padding: 14px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.10);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  .qr-frame img {
+    width: 192px; height: 192px;
+    image-rendering: pixelated;
+    display: block;
+  }
+  .display-name {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+  .provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .provider-name { font-size: 14px; font-weight: 600; color: #1C1C1E; }
+  .provider-type {
+    font-size: 12px; font-weight: 500; color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .uri-chip {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11.5px; font-weight: 500; color: #3D5A73;
+    background: rgba(61,90,115,0.08);
+    border: 1px solid rgba(61,90,115,0.14);
+    border-radius: 8px; padding: 8px 12px;
+    margin-bottom: 14px; word-break: break-all;
+    max-width: 100%; line-height: 1.4;
+  }
+  .note {
+    font-size: 12.5px; font-weight: 500; color: #6B6B70;
+    line-height: 1.5; margin-bottom: 22px; max-width: 380px;
+  }
+  .note strong { color: #1C1C1E; font-weight: 600; }
+  .btn-export {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; min-width: 148px; padding: 0 20px; border-radius: 8px;
+    background: #3D5A73; color: #FFFFFF; font-size: 14px; font-weight: 600;
+    font-family: inherit; border: none; cursor: default;
+  }
+  .btn-export svg {
+    width: 14px; height: 14px; stroke: #FFFFFF; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .meta-foot { margin-top: 18px; font-size: 11px; color: #9A9A9E; font-variant-numeric: tabular-nums; }
+
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · D-MVP-2 · QR 导出</div>
+
+    <article class="export-card" aria-label="Passport QR Export">
+      <div class="poster-kicker">Agent Passport · 导出卡</div>
+      <div class="qr-frame">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyCAIAAABnRsZeAAAHs0lEQVR4nO3cQY4juRFAUbfR1xj4/scy5iDythcGYZifCFL13rYgKTNL+uAiEL8+n88/ADr/nL4A4NvIChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVIPZ758V//fWv6jou8fff/178ded+d9753FWtrT937dwdTV3Vzju/aOdpOK0AMVkBYrICxGQFiMkKEJMVICYrQExWgJisALGtKdu1nSm9c6YmZc/Nd+54cdp157VT9/t9v4U1pxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVIHZwynbtzg2s59w5OXrnDt3v2wu79n2/BacVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSA2NmX7oqnpzztncNem5jvPPSv+d04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0DMlG3m3LbaqV2nU9tqz027Tn3uT+O0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLExqZsf9pE49Q869rU7O+5ieSd79XUDO73/RacVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2MEp26nJ0TtNzbOe+9xzr91x57ban/ZbcFoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJbU7bft4PznJ1nNfWcp2Zw1+6co/Vb+JPTChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQ25qyfXFf6Z1bRc89yTs3zr44g3vnN+fcHe28s9MKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChD79fl8pq/hvzg30XhuvvPOecfvmw3dMfW92vHiNTutADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxrV22O17cg7vzzjtenJSd2kd757M6586n4bQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsS2dtm+ONH44sbZnUnKc6+dcue+4XOf+yKnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgNrbL9pxzc6V37g0958UZ3Du3EZ/73Dunxp1WgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoDY1i7btXOzg1PvPPXatTu31Z6bWJ16kjtenFfe4bQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQOTtmeMzXBuePOa/5pk8FT22rvvN9z33anFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgtjVle+e22qnPffGdp7w4OXrnnPSdnFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgNjBXbZ3TiX+tBnNO/ek3rlTdse5p/Hit91pBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIHZyy5U8vTmGuvbiBdWrqdMed0+prTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxsl+2dc6VTVzXlzgnOqU23a+e285771tllC3wJWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsd9TH3znHO2On/a5a1OTsi/OOq+9+M1xWgFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYltTtucmKafe+c6Z1HNXNTXBuePO/9Ha1B7cqWfltALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxA7usn1xH+3a9+1JXZuaK71z9nfq+7x+7dQdrTmtADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxrSnbc3OH5167dufO0XMzmi/ODb94R1PbiM/9UtacVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2MFdtufcucv2xZ2jO597boJzajZ06jlP3e+5eWWnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9uvz+fzfL57aKbvj3GTh1Bzt1Izm2p13dOfm1x137u51WgFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYltTtj/NuQndKS9ujd35L9y5Ufj77shpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWI/d558Yu7P9emJinXduYsd+7oxX20O6/dueapHcl3znY7rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsa0p27U75//u3P259uI0853bas/9B+9856mn4bQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQOTtmu3bnrdO3OfbTnnqT9rH+amnV+8b/gtALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxMambF+0M+26M6N5bhryzonkqWnmqXfe+dw739lpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWImbLNTG2rnZrvfHHH6tr37dCduiOnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgNjZle+dE445z065TpvbvTm2NfXGe9U5OK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitA7OCU7U+bOn1xH+2Oc0/jzonVO69qx7n/gtMKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChD79fl8pq8B+CpOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgJisALH/AGMI2TmzyhdhAAAAAElFTkSuQmCC" alt="QR encoding short passport URI" width="192" height="192" />
+      </div>
+      <h1 class="display-name">CodeReviewer</h1>
+      <div class="provider-row">
+        <span class="provider-name">北湾工作室</span>
+        <span class="provider-type">工作室</span>
+      </div>
+      <div class="uri-chip">https://pass.agentgig.example/a/did:gig:7a3f…c21</div>
+      <p class="note"><strong>扫码仅打开护照详情</strong> · 不等于授权或付款</p>
+      <button type="button" class="btn-export">
+        <svg viewBox="0 0 14 14"><path d="M7 2v7"/><polyline points="4,6.5 7,9.5 10,6.5"/><path d="M2.5 11.5h9"/></svg>
+        导出 PNG
+      </button>
+      <div class="meta-foot">载荷仅为短 URI · 不含权限清单</div>
+    </article>
+
+  </div>
+</body>
+</html>

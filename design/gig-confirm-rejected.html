@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Confirm Rejected</title>
+<!-- Host modal sizes: desktop 520–560px wide; mobile full-sheet from bottom OK. -->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .host {
+    width: 1440px; height: 900px;
+    position: relative;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .desk-label {
+    position: absolute;
+    top: 48px; left: 56px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .card {
+    width: 440px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.06),
+      0 24px 48px rgba(28,28,30,0.04);
+    padding: 32px 28px 28px;
+    text-align: center;
+  }
+  .icon {
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .icon svg {
+    width: 18px; height: 18px;
+    stroke: #B85C5C; fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+  }
+  .card-body {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.55;
+    margin-bottom: 24px;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 120px;
+    padding: 0 22px;
+    border-radius: 8px;
+    background: #3D5A73;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+  <div class="host">
+    <div class="desk-label"><strong>Agent Gig</strong> · Confirm · 已拒绝</div>
+    <div class="card" role="status">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 18 18"><line x1="4" y1="4" x2="14" y2="14"/><line x1="14" y1="4" x2="4" y2="14"/></svg>
+      </div>
+      <div class="card-title">雇佣已拒绝</div>
+      <p class="card-body">你已拒绝本次雇佣，对方未获得权限，未锁定资金。</p>
+      <button type="button" class="btn-primary">返回</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Verify Fail</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 48px; left: 56px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+
+  .err-card {
+    width: 440px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.06),
+      0 24px 48px rgba(28,28,30,0.04);
+    padding: 36px 28px 28px;
+    text-align: center;
+  }
+  .icon {
+    width: 48px; height: 48px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .icon svg {
+    width: 22px; height: 22px;
+    stroke: #B85C5C; fill: none;
+    stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+  }
+  .card-body {
+    font-size: 14px;
+    font-weight: 600;
+    color: #B85C5C;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .card-hint {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.5;
+    margin-bottom: 26px;
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 120px;
+    padding: 0 22px;
+    border-radius: 8px;
+    background: transparent;
+    color: #3D5A73;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid rgba(61,90,115,0.28);
+    cursor: default;
+  }
+
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · D-MVP-2 · 验签失败</div>
+
+    <div class="err-card" role="alert">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5"/><line x1="11" y1="7" x2="11" y2="12"/><circle cx="11" cy="15.2" r="0.9" fill="#B85C5C" stroke="none"/></svg>
+      </div>
+      <div class="card-title">无法验证此护照</div>
+      <p class="card-body">请勿付款或授权</p>
+      <p class="card-hint">签名无效或内容可能被篡改。打开详情不等于获得权限。</p>
+      <button type="button" class="btn-secondary">返回</button>
+    </div>
+
+  </div>
+</body>
+</html>

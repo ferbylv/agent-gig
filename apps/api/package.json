@@ -1,0 +1,16 @@
+{
+  "name": "@agent-gig/api",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "seed": "bun run src/seed-cli.ts",
+    "build": "echo api-ok"
+  },
+  "dependencies": {
+    "@agent-gig/shared": "workspace:*",
+    "hono": "^4.6.12",
+    "@hono/node-server": "^1.13.7"
+  }
+}
