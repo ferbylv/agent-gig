@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Passport Fail</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 48px; left: 56px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .passport {
+    width: 440px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 8px 24px rgba(28,28,30,0.06),
+      0 24px 48px rgba(28,28,30,0.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .fail-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(184,92,92,0.10);
+    border-bottom: 1px solid rgba(184,92,92,0.22);
+    color: #B85C5C;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .fail-banner svg {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    stroke: #B85C5C;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .fail-banner span { font-weight: 500; }
+  .card-body { padding: 24px 28px 24px; position: relative; }
+  .badge-fail {
+    position: absolute;
+    top: 0; right: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .provider { margin-bottom: 18px; padding-right: 100px; }
+  .provider-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 4px;
+  }
+  .provider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .provider-name {
+    font-size: 15px;
+    font-weight: 650;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+  }
+  .provider-type {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+  .display-name {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+  .tagline {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.45;
+    margin-bottom: 16px;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .skill {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+  .pricing {
+    font-size: 15px;
+    font-weight: 600;
+    color: #9A9A9E;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+    text-decoration: line-through;
+    text-decoration-color: rgba(184,92,92,0.45);
+  }
+  .pricing .unit {
+    font-weight: 500;
+    color: #9A9A9E;
+    font-size: 13px;
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 14px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-row .value { color: #6B6B70; font-weight: 500; }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+  }
+  .detail-link {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(107,107,112,0.35);
+    padding-bottom: 1px;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · Passport · 签名无效</div>
+    <article class="passport" aria-label="Gig Passport Fail">
+      <div class="fail-banner">
+        <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5"/><line x1="7" y1="4.5" x2="7" y2="7.5"/><circle cx="7" cy="9.5" r="0.6" fill="#B85C5C" stroke="none"/></svg>
+        <div>签名无效，内容可能被篡改 <span style="display:block;font-weight:500;opacity:0.85;margin-top:2px;">请勿信任此挂牌信息或发起结算</span></div>
+      </div>
+      <div class="card-body">
+        <div class="badge-fail">未验签</div>
+        <div class="provider">
+          <div class="provider-label">结算主体</div>
+          <div class="provider-row">
+            <span class="provider-name">北湾工作室</span>
+            <span class="provider-type">工作室</span>
+          </div>
+        </div>
+        <h1 class="display-name">CodeReviewer</h1>
+        <p class="tagline">PR 审查与风险标注，不直接 push</p>
+        <div class="skills">
+          <span class="skill">代码审查</span>
+          <span class="skill">安全扫描</span>
+        </div>
+        <div class="pricing">15 GigUSD <span class="unit">· 按次</span></div>
+        <div class="meta">
+          <div class="meta-row">
+            <span class="label">DID</span>
+            <span class="value">did:gig:7a3f…c21</span>
+          </div>
+          <div class="meta-row">
+            <span class="label">版本</span>
+            <span class="value">1.2.0 · 更新 2026-09-04</span>
+          </div>
+        </div>
+        <div class="footer">
+          <span class="status-pill">不可信</span>
+          <a class="detail-link" href="#">查看详情</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — Gig Skill · Audit</title>
+<style>
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .panel {
+    width: 900px;
+    height: 640px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-top {
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 0 22px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title .brand-mark {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    letter-spacing: -0.02em;
+  }
+  .panel-close {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: #6B6B70;
+  }
+  .panel-body {
+    flex: 1; min-height: 0;
+    display: flex; flex-direction: row;
+  }
+  .nav {
+    width: 172px;
+    flex-shrink: 0;
+    padding: 12px 10px;
+    border-right: 1px solid rgba(28,28,30,0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-item {
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B6B70;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.01em;
+    width: 100%;
+  }
+  .nav-item.is-on {
+    color: #3D5A73;
+    background: rgba(61,90,115,0.12);
+    font-weight: 600;
+  }
+  .nav-item.is-disabled {
+    color: #9A9A9E;
+    opacity: 0.72;
+  }
+  .nav-item .soon {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 500;
+    color: #9A9A9E;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .content {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 30px 28px;
+    overflow: hidden;
+  }
+  .page-h {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: #6B6B70;
+    margin-bottom: 22px;
+    line-height: 1.45;
+  }
+  .sec { margin-bottom: 22px; }
+  .sec:last-child { margin-bottom: 0; }
+  .sec-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 44px;
+  }
+  .seg {
+    display: inline-flex;
+    background: rgba(28,28,30,0.05);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    height: 32px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .seg button.is-on {
+    background: #FFFFFF;
+    color: #1C1C1E;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(28,28,30,0.08);
+  }
+  .seg button.is-off {
+    color: #9A9A9E;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px 0 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .pill.ok {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+  }
+  .pill.ok .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .pill.warn {
+    background: rgba(28,28,30,0.06);
+    color: #6B6B70;
+  }
+  .pill.warn .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #9A9A9E;
+  }
+  .identity {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .identity .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1C1E;
+  }
+  .identity .did {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .callout {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: rgba(61,90,115,0.06);
+    border: 1px solid rgba(61,90,115,0.10);
+  }
+  .callout p {
+    font-size: 13px;
+    color: #3D5A73;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+  .callout p.sub {
+    color: #6B6B70;
+    font-weight: 400;
+    font-size: 12px;
+  }
+  .readonly {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 8px;
+    background: rgba(28,28,30,0.03);
+    border: 1px solid rgba(28,28,30,0.06);
+  }
+  .readonly .k { font-size: 13px; color: #6B6B70; font-weight: 500; }
+  .readonly .v { font-size: 13px; color: #1C1C1E; font-weight: 600; }
+  .readonly .tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+    margin-left: 8px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1C1C1E;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .field label .code {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.12);
+    background: #FFFFFF;
+    gap: 8px;
+  }
+  .input-wrap .val {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1C1C1E;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .input-wrap .unit {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .helper {
+    font-size: 12px;
+    color: #6B6B70;
+    line-height: 1.5;
+    margin-top: 4px;
+    margin-bottom: 18px;
+  }
+  .helper.strong {
+    color: #1C1C1E;
+    background: rgba(184,92,92,0.06);
+    border: 1px solid rgba(184,92,92,0.14);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-weight: 500;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+  }
+  .btn-outline {
+    background: #FFFFFF;
+    color: #3D5A73;
+    border: 1px solid rgba(61,90,115,0.35);
+  }
+  .btn-secondary {
+    background: rgba(28,28,30,0.05);
+    color: #1C1C1E;
+    border: 1px solid rgba(28,28,30,0.08);
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 12px;
+  }
+  .table th {
+    text-align: left;
+    font-weight: 500;
+    color: #9A9A9E;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(28,28,30,0.08);
+    font-size: 11px;
+  }
+  .table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid rgba(28,28,30,0.05);
+    color: #1C1C1E;
+    font-weight: 500;
+  }
+  .table td.muted { color: #6B6B70; font-weight: 400; }
+  .table td.mono {
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .banner-danger {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: rgba(184,92,92,0.08);
+    border: 1px solid rgba(184,92,92,0.22);
+    margin-bottom: 20px;
+  }
+  .banner-danger .ico {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: rgba(184,92,92,0.18);
+    color: #B85C5C;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .banner-danger .body { flex: 1; min-width: 0; }
+  .banner-danger .msg {
+    font-size: 13px;
+    font-weight: 600;
+    color: #B85C5C;
+    line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .empty-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 28px 24px;
+    border-radius: 8px;
+    border: 1px dashed rgba(28,28,30,0.14);
+    background: rgba(28,28,30,0.02);
+  }
+  .empty-box h3 {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .empty-box p {
+    font-size: 13px;
+    color: #6B6B70;
+    line-height: 1.5;
+  }
+  .dim-note {
+    font-size: 12px;
+    color: #9A9A9E;
+    margin-top: 12px;
+  }
+
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="desk-label"><strong>Agent Gig</strong> · Gig Skill 设置</div>
+  <div class="desk-meta">Agent Gig · MVP V0</div>
+  <div class="panel">
+    <div class="panel-top">
+      <div class="panel-title">
+        <span class="brand-mark">G</span>
+        Gig Skill
+      </div>
+      <button class="panel-close" type="button" aria-label="关闭">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 3l8 8M11 3L3 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="panel-body">
+      <nav class="nav">
+<button class="nav-item" type="button">Connect</button>
+<button class="nav-item" type="button">Budget</button>
+<button class="nav-item is-on" type="button">Audit</button>
+<button class="nav-item is-disabled" type="button">Pay<span class="soon">只读</span></button>
+<button class="nav-item is-disabled" type="button">Portfolio<span class="soon">即将开放 · V0.5</span></button>
+</nav>
+      <main class="content">
+
+        <div class="page-h">Audit</div>
+        <div class="page-sub">本地保留最近 90 天流水（示意）</div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline" type="button">查看流水</button>
+          <button class="btn btn-secondary" type="button">导出 CSV</button>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>主体</th>
+              <th>对手方</th>
+              <th>金额</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="muted mono">09-04 14:22</td>
+              <td>CodeReviewer</td>
+              <td class="muted">NovaDocs · 审稿</td>
+              <td class="mono">−28.00 GigUSD</td>
+            </tr>
+            <tr>
+              <td class="muted mono">09-03 19:05</td>
+              <td>CodeReviewer</td>
+              <td class="muted">PixelQA · 回归</td>
+              <td class="mono">−12.50 GigUSD</td>
+            </tr>
+            <tr>
+              <td class="muted mono">09-02 11:40</td>
+              <td>CodeReviewer</td>
+              <td class="muted">LexiFix · 文案</td>
+              <td class="mono">−35.00 GigUSD</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="dim-note">示意数据 · 导出为本地 CSV，不上链</p>
+
+      </main>
+    </div>
+  </div>
+</div>
+</body>
+</html>

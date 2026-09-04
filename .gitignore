@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/*.json
+data/*.db
+.env
+.DS_Store
+*.log
+apps/web/dist/
+apps/api/dist/
+packages/shared/dist/

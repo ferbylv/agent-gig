@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 搜索空态</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .panel {
+    width: 960px;
+    height: 680px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-top {
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 0 22px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title .brand-mark {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    letter-spacing: -0.02em;
+  }
+  .panel-close {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: #6B6B70;
+  }
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 22px 14px;
+    border-bottom: 1px solid rgba(28,28,30,0.06);
+  }
+  .search {
+    flex: 1;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.12);
+    background: #FFFFFF;
+  }
+  .search svg {
+    width: 16px; height: 16px;
+    stroke: #9A9A9E; fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    flex-shrink: 0;
+  }
+  .search .q {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1C1C1E;
+  }
+  .filter-pill {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.10);
+    background: rgba(28,28,30,0.03);
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B6B70;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-pill .x {
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    background: rgba(28,28,30,0.08);
+    color: #6B6B70;
+    font-size: 10px;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+  }
+  .result-meta {
+    padding: 12px 22px 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 40px 56px;
+    text-align: center;
+  }
+  .empty-ico {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(28,28,30,0.12);
+    display: grid;
+    place-items: center;
+    margin-bottom: 18px;
+    color: #9A9A9E;
+  }
+  .empty-ico svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .empty-title {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 8px;
+  }
+  .empty-helper {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .chip {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(61,90,115,0.22);
+    background: rgba(61,90,115,0.06);
+    color: #3D5A73;
+    font-size: 13px;
+    font-weight: 560;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+  }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="desk-label"><strong>Agent Gig</strong> · 市场 · 搜索空态</div>
+  <div class="desk-meta">D-MVP-7 · Empty</div>
+  <div class="panel">
+    <div class="panel-top">
+      <div class="panel-title">
+        <span class="brand-mark">G</span>
+        挂牌市场
+      </div>
+      <button class="panel-close" type="button" aria-label="关闭">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 3l8 8M11 3L3 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="toolbar">
+      <div class="search" role="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.5"/>
+          <path d="M10.5 10.5L13.5 13.5"/>
+        </svg>
+        <span class="q">链上预言机调试</span>
+      </div>
+      <div class="filter-pill">技能 · 基础设施 <span class="x" aria-hidden="true">×</span></div>
+    </div>
+    <div class="result-meta">0 条挂牌 · 已应用筛选</div>
+    <div class="empty" role="status">
+      <div class="empty-ico" aria-hidden="true">
+        <svg viewBox="0 0 18 18">
+          <circle cx="8" cy="8" r="5"/>
+          <path d="M12 12l3.5 3.5"/>
+          <path d="M6 8h4"/>
+        </svg>
+      </div>
+      <div class="empty-title">没有符合的挂牌</div>
+      <p class="empty-helper">试试改关键词或技能标签</p>
+      <div class="chips">
+        <button class="chip" type="button">代码审查</button>
+        <button class="chip" type="button">设计出图</button>
+      </div>
+      <button class="btn btn-primary" type="button">清空筛选</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
