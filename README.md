@@ -12,7 +12,7 @@ apps/web        React + Vite — 检索 / 护照 / Confirm / Budget / 验收（�
 packages/shared Types · 状态机 · Ed25519 验签（@noble/ed25519）
 scripts/e2e.ts  API 级验收（V0 关键路径）
 scripts/e2e-s1.ts  V0.5-S1：自定义发单 / revise / 拒收
-design/         冻结视觉稿（参考）
+design/         冻结视觉稿（参考；S1 见 design/v0.5-s1/）
 ```
 
 状态机主路径：`draft → quoted → accepted → in_progress → delivered → accepted_done → released`  
@@ -71,7 +71,7 @@ bun run e2e:s1   # V0.5-S1：默认 revisions=1、改单快乐路径、次数用
 - Budget 三限额硬拒绝；自定义发单表单 **不能**绕过
 - 对某 `providerAgentId` 首单 **必须** Confirm，门上 MUST 含 provider
 - Confirm × = 拒绝 → 无 escrow lock
-- 默认 `revisions=1`；「需修改」消耗 1 次回流；用尽则 4xx / UI 禁用
+- 默认 `revisions=1` 且 **max=1**（API+表单 clamp）；「需修改」消耗 1 次回流；用尽则 4xx / UI 禁用
 - 修改路径 **无**二次锁仓、**无**加价；Escrow 保持 locked
 - Passport 卡 **无** 雇佣/付款主 CTA
 - Skill **永不**持有私钥

@@ -111,6 +111,7 @@ async function main() {
   await test("S1-1 create accepts summary/feeCap/SLA/revisions default 1", async () => {
     const meta = await req("/v0/meta");
     assert(meta.data.notes?.revisionsDefault === 1, "platform revisionsDefault=1");
+    assert(meta.data.notes?.revisionsMax === 1, "platform revisionsMax=1");
 
     const r = await req("/v0/orders", {
       method: "POST",
@@ -137,6 +138,28 @@ async function main() {
     assert(c.data.confirm?.sla?.revisions === 1, "confirm shows revisions");
     assert(c.data.confirm?.taskSummary === "S1 custom summary", "confirm summary");
     // reject to avoid locking
+    await req(`/v0/orders/${r.data.order.orderId}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ decision: "reject", userId: USER }),
+    });
+  });
+
+  await test("S1-1b revisions>max clamped to 1", async () => {
+    const r = await req("/v0/orders", {
+      method: "POST",
+      role: "hirer",
+      actorId: HIRER,
+      body: JSON.stringify({
+        providerAgentId: PROVIDER,
+        feeCap: 10,
+        taskSummary: "clamp revisions",
+        hirerUserId: USER,
+        revisions: 9,
+      }),
+    });
+    assert(r.status === 201, "201");
+    assert(r.data.order.revisions === 1, "clamped revisions=1");
+    assert(r.data.order.revisionsRemaining === 1, "clamped remaining=1");
     await req(`/v0/orders/${r.data.order.orderId}/confirm`, {
       method: "POST",
       body: JSON.stringify({ decision: "reject", userId: USER }),

@@ -16,7 +16,6 @@ export default function PassportPage() {
   const [taskSummary, setTaskSummary] = useState("审查 demo-repo PR #42：安全与可读性");
   const [feeCap, setFeeCap] = useState("20");
   const [slaHours, setSlaHours] = useState("48");
-  const [revisions, setRevisions] = useState("1");
 
   useEffect(() => {
     api(`/v0/passports/${encodeURIComponent(did)}`)
@@ -54,7 +53,6 @@ export default function PassportPage() {
     const summary = taskSummary.trim();
     const fee = Number(feeCap);
     const hours = Number(slaHours);
-    const revs = Number(revisions);
     if (!summary) {
       setFormErr("请填写任务摘要");
       return;
@@ -67,10 +65,8 @@ export default function PassportPage() {
       setFormErr("交付时限须为正数小时");
       return;
     }
-    if (!Number.isInteger(revs) || revs < 0) {
-      setFormErr("修改次数须为 ≥0 的整数");
-      return;
-    }
+    // S1 freeze: revisions fixed at 1 (API also clamps to REVISIONS_MAX)
+    const revs = 1;
     setBusy(true);
     try {
       const res = await api<any>("/v0/orders", {
@@ -197,13 +193,15 @@ export default function PassportPage() {
             <input
               id="revisions"
               type="number"
-              min={0}
+              min={1}
+              max={1}
               step="1"
-              value={revisions}
-              onChange={(e) => setRevisions(e.target.value)}
-              disabled={status !== "active" || busy}
+              value={1}
+              readOnly
+              disabled
+              title="S1：修改次数固定为 1"
             />
-            <span className="faint">含 N 次免费修改；用尽后需拒收或新开单。默认 1。</span>
+            <span className="faint">含 1 次免费修改；用尽后需拒收或新开单（S1 上限 1）。</span>
           </div>
           {formErr && <div className="banner error">{formErr}</div>}
           <button className="btn primary" type="submit" disabled={status !== "active" || busy}>

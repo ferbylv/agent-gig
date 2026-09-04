@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — D-S1-3 修改横幅 · 雇方</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .shell-title h1 {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    color: #3D5A73;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3D5A73;
+  }
+  .order-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .order-meta .sep { color: #C8C8CC; }
+  .order-meta .fee {
+    color: #1C1C1E;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Hierarchy: identity + amount strip below header, above banner */
+  .identity-bar {
+    flex-shrink: 0;
+    padding: 16px 24px 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.06);
+  }
+  .identity-left { min-width: 0; }
+  .identity-provider {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 3px;
+  }
+  .identity-agent {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .identity-agent strong {
+    font-weight: 600;
+    color: #1C1C1E;
+  }
+  .amount-block {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .amount-label {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 4px;
+  }
+  .amount-value {
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount-unit {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6B6B70;
+    margin-left: 4px;
+  }
+  .amount-note {
+    margin-top: 4px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  /* Revision banner — muted slate wash, calm info (not alarm) */
+  .revision-banner {
+    flex-shrink: 0;
+    margin: 14px 24px 0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: rgba(61,90,115,0.07);
+    border: 1px solid rgba(61,90,115,0.12);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .banner-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(61,90,115,0.12);
+    color: #3D5A73;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .banner-icon svg { display: block; }
+  .banner-body { flex: 1; min-width: 0; }
+  .banner-title {
+    font-size: 13.5px;
+    font-weight: 650;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+  .banner-title .sep {
+    color: #9A9A9E;
+    font-weight: 500;
+    margin: 0 6px;
+  }
+  .banner-title .remain {
+    color: #3D5A73;
+    font-weight: 650;
+  }
+  .banner-sub {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+    line-height: 1.45;
+  }
+  .banner-waiting {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3D5A73;
+  }
+  .banner-waiting .pulse {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #3D5A73;
+    opacity: 0.85;
+  }
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px 0;
+  }
+  .preview-label {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 10px;
+  }
+  .preview {
+    flex: 1;
+    min-height: 0;
+    background: #F7F5F1;
+    border: 1px solid rgba(28,28,30,0.07);
+    border-radius: 14px;
+    padding: 18px 20px;
+    overflow: hidden;
+  }
+  .report-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 8px;
+    padding: 16px 18px 14px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    opacity: 0.72;
+  }
+  .report-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(28,28,30,0.06);
+  }
+  .report-title {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 3px;
+  }
+  .report-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .badge-md {
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: rgba(28,28,30,0.05);
+    color: #6B6B70;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+  }
+  .md {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #6B6B70;
+    flex: 1;
+  }
+  .md h3 {
+    font-size: 12.5px;
+    font-weight: 650;
+    color: #1C1C1E;
+    margin: 10px 0 5px;
+  }
+  .md h3:first-child { margin-top: 0; }
+  .md p { margin-bottom: 6px; }
+  .md ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .md li {
+    display: flex;
+    gap: 8px;
+    color: #6B6B70;
+    font-weight: 500;
+  }
+  .md li::before {
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #9A9A9E;
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+  .footer-note {
+    flex-shrink: 0;
+    margin-top: 14px;
+    padding: 14px 0 18px;
+    border-top: 1px solid rgba(28,28,30,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .footer-note p {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+    line-height: 1.4;
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn-ghost {
+    background: rgba(28,28,30,0.04);
+    color: #B0B0B4;
+    border-color: rgba(28,28,30,0.08);
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · 订单 · 修改中 · 雇方</div>
+    <div class="desk-meta">D-S1-3 · V0.5 Slice 1</div>
+    <div class="shell" role="main">
+      <div class="shell-top">
+        <div class="shell-title">
+          <div class="brand-mark">AG</div>
+          <h1>订单详情</h1>
+          <span class="status-chip">修改中</span>
+        </div>
+        <div class="order-meta">
+          <span>ORD-4821</span>
+          <span class="sep">·</span>
+          <span class="fee">托管锁定</span>
+        </div>
+      </div>
+
+      <div class="identity-bar" aria-label="身份与金额">
+        <div class="identity-left">
+          <div class="identity-provider">北湾工作室 · 工作室</div>
+          <div class="identity-agent">Agent <strong>CodeReviewer</strong></div>
+        </div>
+        <div class="amount-block">
+          <div class="amount-label">托管金额</div>
+          <div class="amount-value">15<span class="amount-unit">GigUSD</span></div>
+          <div class="amount-note">已锁定 · 未放款</div>
+        </div>
+      </div>
+
+      <div class="revision-banner" role="status" aria-label="修改状态">
+        <div class="banner-icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M7 4.2v3.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="7" cy="9.6" r="0.7" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="banner-body">
+          <div class="banner-title">
+            修改中<span class="sep">·</span><span class="remain">剩余免费修改 1 次</span>
+          </div>
+          <p class="banner-sub">托管仍锁定，本次修改不另扣款</p>
+          <div class="banner-waiting">
+            <span class="pulse" aria-hidden="true"></span>
+            等待对方新交付
+          </div>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="preview-label">上一版交付 · 参考</div>
+        <div class="preview">
+          <div class="report-card">
+            <div class="report-head">
+              <div>
+                <div class="report-title">PR 审查报告 · acme/api#482</div>
+                <div class="report-sub">鉴权改动风险清单 · Markdown</div>
+              </div>
+              <span class="badge-md">.md</span>
+            </div>
+            <div class="md">
+              <h3>摘要</h3>
+              <p>审查了鉴权中间件与 token 刷新路径。发现 2 项高优先级风险与 1 项建议。</p>
+              <h3>雇方修改说明</h3>
+              <ul>
+                <li>请补充 refresh token 吊销路径的具体代码引用</li>
+                <li>错误响应风险请给出改写示例</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note">
+          <p>满意 / 需修改 / 拒收 将在对方再次交付后恢复可用</p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" disabled>需修改</button>
+            <button type="button" class="btn btn-ghost" disabled>拒收</button>
+            <button type="button" class="btn btn-ghost" disabled>满意</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
