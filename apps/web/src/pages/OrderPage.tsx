@@ -33,6 +33,10 @@ export default function OrderPage() {
       setEscrow(d.escrow ?? null);
       if (path === "acceptance" && body?.decision === "satisfied") {
         setMsg("验收满意 → 已放款（含 10% 抽成流水）");
+      } else if (path === "acceptance" && body?.decision === "revise") {
+        setMsg("已请求修改：回 in_progress，托管仍锁定、不另扣款");
+      } else if (path === "acceptance" && body?.decision === "reject") {
+        setMsg("已拒收：托管退回雇方，未放款给 provider");
       }
     } catch (e: any) {
       setMsg(e.message);
@@ -40,6 +44,11 @@ export default function OrderPage() {
   }
 
   if (!order) return <p className="muted">{msg ?? "加载中…"}</p>;
+
+  const remaining = order.revisionsRemaining ?? 0;
+  const showRevisionBanner =
+    order.status === "revision_requested" ||
+    (order.status === "in_progress" && order.timestamps?.revision_requested);
 
   return (
     <div className="card">
@@ -63,7 +72,25 @@ export default function OrderPage() {
       <p className="faint">
         雇方 {order.parties.hirerAgentId} → 接单 {order.parties.providerAgentId} · 结算 {order.parties.providerId}
       </p>
-      <p className="faint">修改剩余 revisionsRemaining={order.revisionsRemaining}（V0 恒为 0）</p>
+      <p className="faint">
+        费用上限 {order.pricing?.feeCap} GigUSD · SLA 截止 {order.sla?.dueAt}
+        {" · "}修改剩余 {remaining}/{order.revisions ?? 0}
+      </p>
+
+      {showRevisionBanner && (
+        <div className="banner info" role="status">
+          <div>修改中 · 剩余免费修改 {remaining} 次</div>
+          <p className="banner-sub">托管仍锁定，本次修改不另扣款；等待对方新交付</p>
+          {order.revisionNote ? <p className="banner-sub">说明：{order.revisionNote}</p> : null}
+        </div>
+      )}
+
+      {order.status === "delivered" && remaining <= 0 && (
+        <div className="banner info" role="status">
+          <div>剩余免费修改 0 次 · 不可再请求修改</div>
+          <p className="banner-sub">可拒收后退款，或满意后放款；如需继续合作请新开单</p>
+        </div>
+      )}
 
       {msg && <div className="banner warn">{msg}</div>}
 
@@ -81,7 +108,7 @@ export default function OrderPage() {
             接单方开工
           </button>
         )}
-        {order.status === "in_progress" && (
+        {(order.status === "in_progress" || order.status === "revision_requested") && (
           <button
             className="btn primary"
             onClick={() =>
@@ -93,7 +120,7 @@ export default function OrderPage() {
               )
             }
           >
-            提交交付
+            {showRevisionBanner ? "请按说明修改后再次交付" : "提交交付"}
           </button>
         )}
         {(order.status === "quoted" || order.status === "accepted") && (
@@ -105,22 +132,36 @@ export default function OrderPage() {
 
       {order.status === "delivered" && (
         <div className="accept-bar">
-          <button className="btn primary" onClick={() => act("acceptance", { decision: "satisfied" })}>
+          <button
+            className="btn primary"
+            title="确认验收并放款给 provider"
+            onClick={() => act("acceptance", { decision: "satisfied" })}
+          >
             满意
           </button>
           <button
             className="btn"
-            disabled
-            title="V0 修改=0：请拒收后重新开单"
+            disabled={remaining <= 0}
+            title={
+              remaining <= 0
+                ? "修改次数已用完，可拒收或新开单"
+                : "消耗 1 次修改机会，对方将在本单继续修改；不另扣托管"
+            }
             onClick={() => act("acceptance", { decision: "revise" })}
           >
             需修改
           </button>
-          <button className="btn danger" onClick={() => act("acceptance", { decision: "reject" })}>
+          <button
+            className="btn danger"
+            title="拒收后托管将按规则退回；不会放款给 provider"
+            onClick={() => act("acceptance", { decision: "reject" })}
+          >
             拒收
           </button>
           <span className="faint" style={{ alignSelf: "center" }}>
-            「需修改」已禁用：拒收后重开新单
+            {remaining <= 0
+              ? "修改次数已用完，可拒收或新开单"
+              : `剩余 ${remaining} 次免费修改 · 不另扣托管`}
           </span>
         </div>
       )}

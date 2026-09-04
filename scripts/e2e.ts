@@ -57,7 +57,7 @@ async function resetSeed() {
   await req(`/v0/passports/${encodeURIComponent(PROVIDER)}/publish`, { method: "POST" });
   await req("/v0/budget", {
     method: "PUT",
-    body: JSON.stringify({ userId: USER, hirerAgentId: HIRER, totalCap: 100, perOrderCap: 30, dailyCap: 50 }),
+    body: JSON.stringify({ userId: USER, hirerAgentId: HIRER, totalCap: 500, perOrderCap: 50, dailyCap: 500 }),
   });
   // clear confirmed providers by rewriting budget after reading
   const b = await req(`/v0/budget?userId=${USER}&hirerAgentId=${HIRER}`);
@@ -208,7 +208,7 @@ async function main() {
     // restore caps
     await req("/v0/budget", {
       method: "PUT",
-      body: JSON.stringify({ userId: USER, hirerAgentId: HIRER, totalCap: 100, perOrderCap: 30, dailyCap: 50 }),
+      body: JSON.stringify({ userId: USER, hirerAgentId: HIRER, totalCap: 500, perOrderCap: 50, dailyCap: 500 }),
     });
   });
 

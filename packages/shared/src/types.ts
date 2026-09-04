@@ -1,4 +1,4 @@
-/** Agent Gig V0 shared types */
+/** Agent Gig V0.5 shared types */
 
 export type ListingStatus = "active" | "paused" | "revoked";
 export type ProviderType = "individual" | "studio";
@@ -10,6 +10,7 @@ export type OrderStatus =
   | "accepted"
   | "in_progress"
   | "delivered"
+  | "revision_requested"
   | "accepted_done"
   | "released"
   | "rejected"
@@ -21,6 +22,11 @@ export type ActorRole = "user" | "hirer" | "provider" | "admin";
 
 export const SKILL_VERTICALS = ["code_review", "design_illustration"] as const;
 export type SkillVertical = (typeof SKILL_VERTICALS)[number];
+
+/** Platform default free revisions when create omits the field (V0.5-S1: was 0). */
+export const REVISIONS_DEFAULT = 1;
+/** S1 hard cap: create clamps revisions to this max (UI is read-only 1). Values > max are clamped, not rejected. */
+export const REVISIONS_MAX = 1;
 
 export interface Provider {
   providerId: string;
@@ -126,6 +132,8 @@ export interface Order {
   confirmPayload?: ConfirmPayload;
   deliveryPayload?: Record<string, unknown>;
   riskFlags?: string[];
+  /** Optional note from last revise request */
+  revisionNote?: string;
 }
 
 export interface ConfirmPayload {

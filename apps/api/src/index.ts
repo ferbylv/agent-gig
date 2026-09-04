@@ -10,7 +10,7 @@ const app = new Hono();
 
 app.use("*", cors({ origin: "*" }));
 
-app.get("/health", (c) => c.json({ ok: true, service: "agent-gig-api", version: "v0" }));
+app.get("/health", (c) => c.json({ ok: true, service: "agent-gig-api", version: "v0.5-s1" }));
 
 app.get("/v0/meta", (c) => {
   const db = getDb();
@@ -31,7 +31,8 @@ app.get("/v0/meta", (c) => {
       skillNeverHoldsKeys: true,
       currency: "GigUSD",
       takeRateBps: 1000,
-      revisionsDefault: 0,
+      revisionsDefault: 1,
+      revisionsMax: 1,
     },
   });
 });

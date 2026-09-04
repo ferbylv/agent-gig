@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — D-S1-4 · 拒收成功</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+    z-index: 3;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+    z-index: 3;
+  }
+  .host-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.38;
+    filter: saturate(0.85);
+    pointer-events: none;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.10);
+    color: #B85C5C;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #B85C5C;
+  }
+  .order-meta {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .body-fill {
+    flex: 1;
+    padding: 20px 24px;
+    background: #F7F5F1;
+  }
+  .ghost-card {
+    height: 100%;
+    background: #FFF;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.06);
+  }
+  .action-ghost {
+    height: 72px;
+    border-top: 1px solid rgba(28,28,30,0.07);
+    background: #FFF;
+  }
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(28,28,30,0.32);
+    z-index: 1;
+  }
+  .modal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 460px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.12),
+      0 32px 64px rgba(28,28,30,0.10);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .modal-body {
+    padding: 28px 28px 8px;
+  }
+  .modal-icon {
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.12);
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-icon svg {
+    width: 18px; height: 18px;
+    stroke: #3D7A5F;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+  .modal-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .path-card {
+    border-radius: 10px;
+    border: 1px solid rgba(28,28,30,0.08);
+    background: #FBFBF9;
+    padding: 14px 14px 12px;
+    margin-bottom: 4px;
+  }
+  .path-label {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 10px;
+  }
+  .path-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .path-row + .path-row {
+    border-top: 1px solid rgba(28,28,30,0.06);
+  }
+  .path-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .path-who .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1C1C1E;
+  }
+  .path-who .role {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .path-amt {
+    font-size: 14px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .path-amt.refund { color: #3D7A5F; }
+  .path-amt.none { color: #B85C5C; }
+  .path-amt .unit {
+    font-size: 11.5px;
+    font-weight: 550;
+    color: #6B6B70;
+    margin-left: 3px;
+  }
+  .assurance {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(61,122,95,0.06);
+    border: 1px solid rgba(61,122,95,0.12);
+    font-size: 12.5px;
+    font-weight: 550;
+    color: #3D7A5F;
+    line-height: 1.45;
+  }
+  .modal-footer {
+    padding: 20px 28px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .btn {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+    min-width: 108px;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #6B6B70;
+    border-color: rgba(28,28,30,0.14);
+    min-width: 80px;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · V0.5 S1 · D-S1-4 · 拒收成功</div>
+    <div class="desk-meta">退款路径清晰 · 未放款给 provider</div>
+    <div class="host-bg" aria-hidden="true">
+      <div class="shell">
+        <div class="shell-top">
+          <div class="shell-title">
+            <div class="brand-mark">AG</div>
+            订单验收
+            <span class="status-chip">已拒收</span>
+          </div>
+          <div class="order-meta">北湾工作室 · Agent CodeReviewer · 15 GigUSD</div>
+        </div>
+        <div class="body-fill"><div class="ghost-card"></div></div>
+        <div class="action-ghost"></div>
+      </div>
+    </div>
+    <div class="scrim"></div>
+    <div class="modal" role="status" aria-labelledby="rej-done-title">
+      <div class="modal-body">
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 18 18"><polyline points="3.5,9.5 7,13 14.5,5"/></svg>
+        </div>
+        <h1 class="modal-title" id="rej-done-title">已拒收 · 托管按规则退回</h1>
+        <p class="modal-text">订单状态为 <strong style="color:#1C1C1E;font-weight:650;">rejected</strong>。资金退回雇方可用余额，不会放款给 provider。</p>
+        <div class="path-card" aria-label="资金路径">
+          <div class="path-label">资金路径</div>
+          <div class="path-row">
+            <div class="path-who">
+              <span class="name">雇方可用余额</span>
+              <span class="role">托管解锁 · 退回</span>
+            </div>
+            <div class="path-amt refund">+15.00<span class="unit">GigUSD</span></div>
+          </div>
+          <div class="path-row">
+            <div class="path-who">
+              <span class="name">北湾工作室 · CodeReviewer</span>
+              <span class="role">provider 结算</span>
+            </div>
+            <div class="path-amt none">0.00<span class="unit">GigUSD · 未放款</span></div>
+          </div>
+        </div>
+        <p class="assurance">未放款给 provider · 无抽成流水 · 可新开单或返回检索</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary">查看 Audit</button>
+        <button type="button" class="btn btn-primary">返回详情</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

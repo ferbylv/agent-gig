@@ -11,6 +11,11 @@ export default function PassportPage() {
   const [order, setOrder] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [formErr, setFormErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [taskSummary, setTaskSummary] = useState("审查 demo-repo PR #42：安全与可读性");
+  const [feeCap, setFeeCap] = useState("20");
+  const [slaHours, setSlaHours] = useState("48");
 
   useEffect(() => {
     api(`/v0/passports/${encodeURIComponent(did)}`)
@@ -41,8 +46,28 @@ export default function PassportPage() {
           ? { cls: "revoked", text: "已吊销" }
           : { cls: "failed", text: "验签失败" };
 
-  async function hireDemo() {
+  async function submitOrder(e: React.FormEvent) {
+    e.preventDefault();
     setMsg(null);
+    setFormErr(null);
+    const summary = taskSummary.trim();
+    const fee = Number(feeCap);
+    const hours = Number(slaHours);
+    if (!summary) {
+      setFormErr("请填写任务摘要");
+      return;
+    }
+    if (!(fee > 0)) {
+      setFormErr("费用上限须为正数 GigUSD");
+      return;
+    }
+    if (!(hours > 0)) {
+      setFormErr("交付时限须为正数小时");
+      return;
+    }
+    // S1 freeze: revisions fixed at 1 (API also clamps to REVISIONS_MAX)
+    const revs = 1;
+    setBusy(true);
     try {
       const res = await api<any>("/v0/orders", {
         method: "POST",
@@ -50,18 +75,23 @@ export default function PassportPage() {
         actorId: "agent_hirer_demo",
         body: JSON.stringify({
           providerAgentId: did,
-          feeCap: 20,
-          taskSummary: "审查 demo-repo PR #42：安全与可读性",
+          feeCap: fee,
+          taskSummary: summary,
+          slaHours: hours,
+          revisions: revs,
         }),
       });
       setOrder(res.order);
       if (res.order.confirmRequired || res.order.confirmStatus === "pending") {
         setConfirmOpen(true);
+        setMsg("已送确认门：未确认不锁仓");
       } else {
-        setMsg("订单已创建（非首单策略）");
+        setMsg("订单已创建");
       }
-    } catch (e: any) {
-      setMsg(e.message);
+    } catch (ex: any) {
+      setFormErr(ex.message);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -109,27 +139,78 @@ export default function PassportPage() {
           <Link className="btn" to="/search">返回检索</Link>
         </div>
         <p className="faint" style={{ marginTop: 16 }}>
-          名片 ≠ 授权 ≠ 付款。本卡<strong>无雇佣/付款主按钮</strong>。演示发单请用下方「代发演示单」（走 Skill 路径）。
+          名片 ≠ 授权 ≠ 付款。本卡<strong>无雇佣/付款主按钮</strong>。发单请用右侧表单（走 Budget + Confirm）。
         </p>
       </div>
 
       <div className="card">
-        <h2 className="h2">报价 · 演示发单</h2>
-        <p className="muted">起价 {p.pricing?.models?.[0]?.price ?? "—"} GigUSD / 次</p>
+        <h2 className="h2">发起雇佣</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          起价 {p.pricing?.models?.[0]?.price ?? "—"} GigUSD / 次。提交后将校验额度，并向主人弹出确认门；未确认不锁仓。
+        </p>
         {status !== "active" && (
           <div className="banner error">挂牌状态为 {status}，不可接新单。</div>
         )}
         {!data.verified && <div className="banner error">验签失败：卡片可能被篡改。</div>}
-        <button className="btn primary" disabled={status !== "active"} onClick={hireDemo}>
-          雇方 Agent 代发演示单
-        </button>
-        <p className="faint" style={{ marginTop: 8 }}>
-          将经 Budget 校验；对该 providerAgent 首单强制 Confirm（含 provider）。
-        </p>
+
+        <form onSubmit={submitOrder}>
+          <div className="field">
+            <label htmlFor="taskSummary">任务摘要（必填）</label>
+            <textarea
+              id="taskSummary"
+              rows={3}
+              value={taskSummary}
+              onChange={(e) => setTaskSummary(e.target.value)}
+              disabled={status !== "active" || busy}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="feeCap">费用上限（GigUSD）</label>
+            <input
+              id="feeCap"
+              type="number"
+              min={0.01}
+              step="0.01"
+              value={feeCap}
+              onChange={(e) => setFeeCap(e.target.value)}
+              disabled={status !== "active" || busy}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="slaHours">交付时限（小时）</label>
+            <input
+              id="slaHours"
+              type="number"
+              min={1}
+              step="1"
+              value={slaHours}
+              onChange={(e) => setSlaHours(e.target.value)}
+              disabled={status !== "active" || busy}
+            />
+          </div>
+          <div className="field">
+            <span id="revisions-label">修改次数</span>
+            <div
+              className="revisions-ro"
+              role="text"
+              aria-labelledby="revisions-label"
+              aria-label="修改次数（S1 上限 1）"
+            >
+              1
+            </div>
+            <span className="faint">含 1 次免费修改；用尽后需拒收或新开单</span>
+          </div>
+          {formErr && <div className="banner error">{formErr}</div>}
+          <button className="btn primary" type="submit" disabled={status !== "active" || busy}>
+            {busy ? "提交中…" : "下一步：确认雇佣"}
+          </button>
+        </form>
+
         {msg && <div className="banner warn" style={{ marginTop: 12 }}>{msg}</div>}
         {order && (
           <p style={{ marginTop: 12 }}>
             订单 <Link to={`/orders/${order.orderId}`}>{order.orderId}</Link> · {order.status}
+            {" · "}修改 {order.revisionsRemaining}/{order.revisions}
           </p>
         )}
       </div>
@@ -138,7 +219,6 @@ export default function PassportPage() {
         <ConfirmModal
           orderId={order.orderId}
           onClose={() => {
-            // × = reject
             api(`/v0/orders/${order.orderId}/confirm`, {
               method: "POST",
               body: JSON.stringify({ decision: "reject" }),

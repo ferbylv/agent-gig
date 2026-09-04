@@ -8,3 +8,4 @@ data/*.db
 apps/web/dist/
 apps/api/dist/
 packages/shared/dist/
+apps/web/.vite/

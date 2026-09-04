@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 确认需修改</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  textarea { font-family: inherit; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+    z-index: 3;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+    z-index: 3;
+  }
+  .host-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.42;
+    filter: saturate(0.85);
+    pointer-events: none;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    color: #3D5A73;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3D5A73;
+  }
+  .order-meta {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .body-fill {
+    flex: 1;
+    padding: 20px 24px;
+    background: #F7F5F1;
+  }
+  .ghost-card {
+    height: 100%;
+    background: #FFF;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.06);
+  }
+  .action-ghost {
+    height: 88px;
+    border-top: 1px solid rgba(28,28,30,0.07);
+    background: #FFF;
+  }
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(28,28,30,0.32);
+    z-index: 1;
+  }
+  .modal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 460px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.12),
+      0 32px 64px rgba(28,28,30,0.10);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 32px; height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: #9A9A9E;
+  }
+  .modal-close svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .modal-body {
+    padding: 28px 28px 8px;
+    position: relative;
+  }
+  .modal-icon {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-icon svg {
+    width: 18px; height: 18px;
+    stroke: #3D5A73;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+    line-height: 1.35;
+    padding-right: 28px;
+  }
+  .modal-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .field-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6B6B70;
+  }
+  .field-label .opt {
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .field textarea {
+    width: 100%;
+    min-height: 84px;
+    resize: none;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.12);
+    background: #FAFAF8;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #1C1C1E;
+    outline: none;
+  }
+  .field textarea::placeholder { color: #B0B0B4; }
+  .modal-note {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    line-height: 1.45;
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(28,28,30,0.03);
+    border-radius: 8px;
+  }
+  .modal-footer {
+    padding: 20px 28px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .btn {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #6B6B70;
+    border-color: rgba(28,28,30,0.14);
+    min-width: 80px;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+    min-width: 120px;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · 验收 · 确认需修改</div>
+    <div class="desk-meta">D-S1-2 · V0.5 Slice1</div>
+    <div class="host-bg" aria-hidden="true">
+      <div class="shell">
+        <div class="shell-top">
+          <div class="shell-title">
+            <div class="brand-mark">AG</div>
+            订单验收
+            <span class="status-chip">已交付 · 待验收</span>
+          </div>
+          <div class="order-meta">北湾工作室 · Agent CodeReviewer · 15 GigUSD</div>
+        </div>
+        <div class="body-fill"><div class="ghost-card"></div></div>
+        <div class="action-ghost"></div>
+      </div>
+    </div>
+    <div class="scrim"></div>
+    <div class="modal" role="dialog" aria-labelledby="rev-title">
+      <div class="modal-body">
+        <button type="button" class="modal-close" aria-label="关闭（取消）">
+          <svg viewBox="0 0 14 14"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 18 18">
+            <path d="M3.5 14.5l1.2-4.2L12.8 2.2a1.5 1.5 0 0 1 2.1 0l1 1a1.5 1.5 0 0 1 0 2.1L6.7 14.5z"/>
+            <path d="M10.5 4.5l3 3"/>
+            <path d="M3 15.5h12"/>
+          </svg>
+        </div>
+        <h1 class="modal-title" id="rev-title">确认需修改？</h1>
+        <p class="modal-text">消耗 1 次修改机会，对方将在本单继续修改；不另扣托管</p>
+        <div class="field">
+          <label class="field-label" for="revise-note">修改说明 <span class="opt">（可选）</span></label>
+          <textarea id="revise-note" placeholder="例如：请补充 refresh 吊销校验的具体改法…"></textarea>
+        </div>
+        <p class="modal-note">修改次数有限，用尽后仅可拒收或新开单。不会无限轮改，也不会因超时自动放款。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary">取消</button>
+        <button type="button" class="btn btn-primary">确认需修改</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
