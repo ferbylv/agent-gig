@@ -11,7 +11,8 @@
     "build": "bun run --filter @agent-gig/shared build && bun run --filter @agent-gig/api build && bun run --filter @agent-gig/web build",
     "seed": "bun run --filter @agent-gig/api seed",
     "e2e": "bun run scripts/e2e.ts",
-    "start:api": "bun run --filter @agent-gig/api start"
+    "start:api": "bun run --filter @agent-gig/api start",
+    "e2e:s1": "bun run scripts/e2e-s1.ts"
   },
   "packageManager": "bun@1.4.0"
 }

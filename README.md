@@ -1,4 +1,4 @@
-# Agent Gig — MVP V0
+# Agent Gig — V0.5 Slice 1
 
 克制、可验的 Agent 劳务市场（Marketplace + Gig Skill）。结算币种：**GigUSD**（模拟）。发现 ≠ 授权 ≠ 付款。
 
@@ -10,12 +10,15 @@ Repo: https://github.com/ferbylv/agent-gig
 apps/api        Hono + JSON file store — Registry / Order / Escrow / Budget / Audit
 apps/web        React + Vite — 检索 / 护照 / Confirm / Budget / 验收（中文 UI）
 packages/shared Types · 状态机 · Ed25519 验签（@noble/ed25519）
-scripts/e2e.ts  API 级验收（V0-1..11 关键路径）
+scripts/e2e.ts  API 级验收（V0 关键路径）
+scripts/e2e-s1.ts  V0.5-S1：自定义发单 / revise / 拒收
 design/         冻结视觉稿（参考）
 ```
 
 状态机主路径：`draft → quoted → accepted → in_progress → delivered → accepted_done → released`  
-旁路：`cancelled` / `rejected`（退款）。V0：**无** revision / dispute。
+旁路：`cancelled` / `rejected`（退款）；**修改回流**：`delivered → revision_requested → in_progress`（Escrow 保持 locked）。
+
+**S1 revise 策略**：雇方 `acceptance.revise` **自动承接**（同请求内原子扣减 `revisionsRemaining` 并回到 `in_progress`）。另提供可选 `POST /orders/:id/revision/ack` 供两步流程。
 
 ## Quickstart
 
@@ -34,11 +37,12 @@ bun run --filter @agent-gig/web dev
 # http://localhost:5173
 ```
 
-Re-seed:
+Re-seed（脏数据或额度用尽时先重种再跑 e2e）：
 
 ```bash
 bun run seed
 # or: bun run --filter @agent-gig/api seed
+# 然后重启 API；文件库 data/ 会累积订单，稳定复跑请 seed 后重启。
 ```
 
 ## E2E
@@ -46,10 +50,9 @@ bun run seed
 API 须已启动：
 
 ```bash
-bun run e2e
+bun run e2e      # V0 回归
+bun run e2e:s1   # V0.5-S1：默认 revisions=1、改单快乐路径、次数用尽、拒收退款、Budget
 ```
-
-覆盖：Passport 检索/验签/吊销、Budget 保存、Confirm 首单+拒绝无锁、perOrder 硬拒绝、快乐路径 lock→放款（含 10% 抽成流水）、非法 `draft→released` 4xx。
 
 ## Seed
 
@@ -62,13 +65,14 @@ bun run e2e
 | Provider legal | Alpha Code Studio |
 | Budget | total 100 / perOrder 30 / daily 50 |
 
-## Product freezes (V0)
+## Product freezes (V0.5-S1)
 
 - 一 Passport 一 Listing；吊销后不可检索
-- Budget 三限额硬拒绝，**无**临时破例 Confirm
+- Budget 三限额硬拒绝；自定义发单表单 **不能**绕过
 - 对某 `providerAgentId` 首单 **必须** Confirm，门上 MUST 含 provider
 - Confirm × = 拒绝 → 无 escrow lock
-- `revisionsRemaining=0`；「需修改」仅引导拒收重开
+- 默认 `revisions=1`；「需修改」消耗 1 次回流；用尽则 4xx / UI 禁用
+- 修改路径 **无**二次锁仓、**无**加价；Escrow 保持 locked
 - Passport 卡 **无** 雇佣/付款主 CTA
 - Skill **永不**持有私钥
 - 抽成 10% 记流水，不挡闭环
@@ -81,7 +85,7 @@ bun run e2e
 - `GET /v0/passports/:did` · `.../export.json` · `.../qr`
 - `POST /v0/admin/listings/:did/revoke`
 - `GET|PUT /v0/budget`
-- `POST /v0/orders` · `.../confirm` · `.../start` · `.../deliver` · `.../acceptance` · `.../cancel`
+- `POST /v0/orders`（`taskSummary` / `feeCap` / `dueAt|dueInHours` / `revisions`）· `.../confirm` · `.../start` · `.../deliver` · `.../acceptance`（`satisfied|revise|reject`）· `.../revision/ack` · `.../cancel`
 - `GET /v0/escrow/:id` · `GET /v0/audit/export`
 
 ## License

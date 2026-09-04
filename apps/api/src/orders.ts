@@ -1,5 +1,6 @@
 import {
   assertTransition,
+  REVISIONS_DEFAULT,
   verifyPassport,
   type ConfirmPayload,
   type Order,
@@ -31,6 +32,28 @@ function setStatus(order: Order, to: OrderStatus): void {
   order.timestamps[to] = nowIso();
 }
 
+function resolveDueAt(input: { dueAt?: string; dueInHours?: number; slaHours?: number }): string {
+  if (input.dueAt) {
+    const t = Date.parse(input.dueAt);
+    if (Number.isNaN(t)) throw new HttpError(400, "Invalid dueAt", "INVALID_SLA");
+    return new Date(t).toISOString();
+  }
+  const hours = input.dueInHours ?? input.slaHours ?? 48;
+  if (typeof hours !== "number" || hours <= 0) {
+    throw new HttpError(400, "dueInHours/slaHours must be positive", "INVALID_SLA");
+  }
+  return new Date(Date.now() + hours * 3600 * 1000).toISOString();
+}
+
+function normalizeRevisions(raw: unknown): number {
+  if (raw === undefined || raw === null) return REVISIONS_DEFAULT;
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isInteger(n) || n < 0) {
+    throw new HttpError(400, "revisions must be an integer >= 0", "INVALID_REVISIONS");
+  }
+  return n;
+}
+
 export function createOrder(input: {
   hirerUserId: string;
   hirerAgentId: string;
@@ -39,12 +62,23 @@ export function createOrder(input: {
   taskSummary: string;
   taskContext?: string;
   asQuoted?: boolean;
+  revisions?: number;
+  dueAt?: string;
+  dueInHours?: number;
+  slaHours?: number;
 }): Order {
   const db = getDb();
   const passport = db.passports[input.providerAgentId];
   if (!passport) throw new HttpError(404, "Passport not found");
   if (passport.listingStatus !== "active") {
     throw new HttpError(400, `Listing is ${passport.listingStatus}, cannot order`, "LISTING_INACTIVE");
+  }
+
+  if (!input.taskSummary || !String(input.taskSummary).trim()) {
+    throw new HttpError(400, "taskSummary is required", "INVALID_TASK");
+  }
+  if (typeof input.feeCap !== "number" || !(input.feeCap > 0)) {
+    throw new HttpError(400, "feeCap must be a positive number", "INVALID_FEE");
   }
 
   const budget = getBudget(input.hirerUserId, input.hirerAgentId);
@@ -58,18 +92,19 @@ export function createOrder(input: {
 
   const isFirst = !budget.confirmedProviders.includes(input.providerAgentId);
   const orderId = uid("ord");
-  const dueAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+  const dueAt = resolveDueAt(input);
+  const revisions = normalizeRevisions(input.revisions);
 
   const order: Order = {
     orderId,
     status: "draft",
-    task: { summary: input.taskSummary, context: input.taskContext },
+    task: { summary: String(input.taskSummary).trim(), context: input.taskContext },
     deliverables: [],
     acceptance: { type: "subjective", requireHumanSignoff: true, criteria: "人工主观验收" },
     pricing: { currency: "GigUSD", feeCap: input.feeCap, quotedAmount: input.feeCap },
     sla: { dueAt, responseMinutes: 60 },
-    revisions: 0,
-    revisionsRemaining: 0,
+    revisions,
+    revisionsRemaining: revisions,
     permissionsGranted: passport.permissionNeeds,
     permissionsDenied: ["wallet.sign", "creds.use", "fs.write"],
     parties: {
@@ -79,7 +114,7 @@ export function createOrder(input: {
       providerId: passport.provider.providerId,
     },
     timestamps: { created: nowIso(), draft: nowIso() },
-    confirmRequired: true, // V0: always Confirm before lock (first-order MUST; others still gate)
+    confirmRequired: true,
     confirmStatus: "pending",
   };
 
@@ -88,32 +123,24 @@ export function createOrder(input: {
     order.timestamps.quoted = nowIso();
   }
 
-  if (true) {
-    order.confirmPayload = {
-      provider: passport.provider,
-      agentDisplayName: passport.displayName,
-      agentDid: input.providerAgentId,
-      verifyStatus: "unknown",
-      taskSummary: input.taskSummary,
-      permissionsAllowed: order.permissionsGranted,
-      permissionsDenied: order.permissionsDenied,
-      feeCap: input.feeCap,
-      currency: "GigUSD",
-      sla: { dueAt, revisions: 0, acceptanceType: "subjective" },
-    };
-    // async verify fill-in
-    void verifyPassport(passport as unknown as Record<string, unknown>).then((ok) => {
-      if (order.confirmPayload) order.confirmPayload.verifyStatus = ok ? "verified" : "failed";
-      saveDb();
-    });
-  }
+  order.confirmPayload = {
+    provider: passport.provider,
+    agentDisplayName: passport.displayName,
+    agentDid: input.providerAgentId,
+    verifyStatus: "unknown",
+    taskSummary: order.task.summary,
+    permissionsAllowed: order.permissionsGranted,
+    permissionsDenied: order.permissionsDenied,
+    feeCap: input.feeCap,
+    currency: "GigUSD",
+    sla: { dueAt, revisions, acceptanceType: "subjective" },
+  };
+  void verifyPassport(passport as unknown as Record<string, unknown>).then((ok) => {
+    if (order.confirmPayload) order.confirmPayload.verifyStatus = ok ? "verified" : "failed";
+    saveDb();
+  });
 
   db.orders[orderId] = order;
-
-  // V0: non-first provider — still quoted until Confirm OR we auto-lock here.
-  // Keep quoted always; UI/API Confirm approve is the lock gate for all V0 orders
-  // (confirmRequired only forces UI). Auto note:
-  // auto-accept non-first is intentionally NOT done; confirm endpoint always locks.
 
   audit({
     actorRole: "hirer",
@@ -123,34 +150,15 @@ export function createOrder(input: {
     amount: input.feeCap,
     counterpart: input.providerAgentId,
     permissions: order.permissionsGranted,
-    detail: { confirmRequired: isFirst },
+    detail: {
+      confirmRequired: isFirst,
+      revisions,
+      revisionsRemaining: revisions,
+      dueAt,
+    },
   });
   saveDb();
   return order;
-}
-
-async function buildConfirmPayload(
-  order: Order,
-  displayName: string,
-  passport: { provider: ConfirmPayload["provider"]; listingStatus: string; pubkey: string; signature: string } & Record<string, unknown>
-): Promise<ConfirmPayload> {
-  const ok = await verifyPassport(passport);
-  return {
-    provider: passport.provider as ConfirmPayload["provider"],
-    agentDisplayName: displayName,
-    agentDid: order.parties.providerAgentId,
-    verifyStatus: ok ? "verified" : "failed",
-    taskSummary: order.task.summary,
-    permissionsAllowed: order.permissionsGranted,
-    permissionsDenied: order.permissionsDenied,
-    feeCap: order.pricing.feeCap,
-    currency: "GigUSD",
-    sla: {
-      dueAt: order.sla.dueAt,
-      revisions: 0,
-      acceptanceType: order.acceptance.type,
-    },
-  };
 }
 
 function syncConfirmPayload(order: Order): ConfirmPayload {
@@ -172,12 +180,11 @@ function syncConfirmPayload(order: Order): ConfirmPayload {
     currency: "GigUSD",
     sla: {
       dueAt: order.sla.dueAt,
-      revisions: 0,
+      revisions: order.revisions,
       acceptanceType: order.acceptance.type,
     },
   };
   order.confirmPayload = payload;
-  // fire and forget verify
   if (passport) {
     verifyPassport(passport as unknown as Record<string, unknown>).then((ok) => {
       if (order.confirmPayload) order.confirmPayload.verifyStatus = ok ? "verified" : "failed";
@@ -193,6 +200,10 @@ export function getConfirm(orderId: string): { order: Order; confirm: ConfirmPay
     throw new HttpError(409, `Confirm only for quoted orders (now ${order.status})`);
   }
   const confirm = order.confirmPayload ?? syncConfirmPayload(order);
+  confirm.sla.revisions = order.revisions;
+  confirm.sla.dueAt = order.sla.dueAt;
+  confirm.taskSummary = order.task.summary;
+  confirm.feeCap = order.pricing.feeCap;
   return { order, confirm };
 }
 
@@ -233,7 +244,6 @@ export function confirmOrder(orderId: string, decision: "approve" | "reject", ac
     return order;
   }
 
-  // approve
   const budget = getBudget(order.parties.hirerUserId, order.parties.hirerAgentId);
   if (!budget) throw new HttpError(400, "Budget missing");
   const check = checkBudgetHard(budget, order.pricing.feeCap);
@@ -270,7 +280,7 @@ export function cancelOrder(orderId: string, actorId: string, role: string): Ord
   const partyOk =
     (role === "hirer" && (actorId === order.parties.hirerAgentId || actorId === order.parties.hirerUserId)) ||
     (role === "provider" && actorId === order.parties.providerAgentId) ||
-    role === "user" && actorId === order.parties.hirerUserId;
+    (role === "user" && actorId === order.parties.hirerUserId);
   if (!partyOk) throw new HttpError(403, "Not a party to this order");
 
   if (order.status === "quoted" || order.status === "draft") {
@@ -279,7 +289,6 @@ export function cancelOrder(orderId: string, actorId: string, role: string): Ord
     refundEscrow(order, "Cancelled after lock, before start");
     setStatus(order, "cancelled");
   } else if (order.status === "in_progress") {
-    // V0: allow cancel with refund for simplicity of demo
     refundEscrow(order, "Cancelled in progress (V0 full refund)");
     setStatus(order, "cancelled");
   } else {
@@ -314,10 +323,19 @@ export function deliverOrder(orderId: string, providerAgentId: string, payload: 
   return order;
 }
 
+/**
+ * V0.5-S1 revise approach: **auto-accept on revise**.
+ * Hirer revise from delivered atomically:
+ *   delivered → revision_requested → in_progress
+ * with revisionsRemaining-- (never negative). Escrow stays locked; no second lock.
+ * Optional POST /orders/:id/revision/ack exists for providers if order is left in revision_requested
+ * (e.g. future two-step); S1 acceptance path auto-completes both edges.
+ */
 export function acceptOrder(
   orderId: string,
   userId: string,
-  decision: "satisfied" | "reject" | "revise"
+  decision: "satisfied" | "reject" | "revise",
+  note?: string
 ): Order {
   const order = mustOrder(orderId);
   if (order.parties.hirerUserId !== userId) {
@@ -328,22 +346,64 @@ export function acceptOrder(
   }
 
   if (decision === "revise") {
-    throw new HttpError(
-      400,
-      "V0 修改次数=0：请拒收后重新开单（需修改仅作引导）",
-      "REVISIONS_ZERO"
-    );
+    if (order.revisionsRemaining <= 0) {
+      throw new HttpError(400, "修改次数已用完，可拒收或新开单", "REVISIONS_EXHAUSTED");
+    }
+    const before = order.revisionsRemaining;
+    const escrowBefore = order.escrowId ? getDb().escrows[order.escrowId] : null;
+    const amountBefore = escrowBefore?.amount;
+    const statusBefore = escrowBefore?.status;
+
+    if (note) order.revisionNote = String(note).slice(0, 500);
+
+    setStatus(order, "revision_requested");
+    order.revisionsRemaining = before - 1;
+    setStatus(order, "in_progress");
+
+    const escrowAfter = order.escrowId ? getDb().escrows[order.escrowId] : null;
+    if (
+      escrowAfter &&
+      (escrowAfter.status !== statusBefore || escrowAfter.amount !== amountBefore)
+    ) {
+      throw new HttpError(500, "Escrow mutated during revise", "ESCROW_INTEGRITY");
+    }
+
+    audit({
+      actorRole: "user",
+      actorId: userId,
+      action: "acceptance.revise",
+      orderId,
+      amount: order.pricing.feeCap,
+      counterpart: order.parties.providerId,
+      detail: {
+        revisionsBefore: before,
+        revisionsRemaining: order.revisionsRemaining,
+        autoAccepted: true,
+        note: order.revisionNote,
+        escrowStatus: escrowAfter?.status,
+        escrowAmount: escrowAfter?.amount,
+      },
+    });
+    saveDb();
+    return order;
   }
 
   if (decision === "reject") {
     setStatus(order, "rejected");
     refundEscrow(order, "Delivery rejected by hirer");
-    audit({ actorRole: "user", actorId: userId, action: "acceptance.reject", orderId });
+    audit({
+      actorRole: "user",
+      actorId: userId,
+      action: "acceptance.reject",
+      orderId,
+      amount: order.pricing.feeCap,
+      counterpart: order.parties.providerId,
+      detail: { refunded: true },
+    });
     saveDb();
     return order;
   }
 
-  // satisfied
   setStatus(order, "accepted_done");
   releaseEscrow(order);
   setStatus(order, "released");
@@ -354,6 +414,27 @@ export function acceptOrder(
     orderId,
     amount: order.pricing.feeCap,
     counterpart: order.parties.providerId,
+  });
+  saveDb();
+  return order;
+}
+
+/** Optional provider ack if order sits in revision_requested (two-step); S1 auto-accept usually skips this. */
+export function ackRevision(orderId: string, providerAgentId: string): Order {
+  const order = mustOrder(orderId);
+  if (order.parties.providerAgentId !== providerAgentId) {
+    throw new HttpError(403, "Only provider agent can ack revision");
+  }
+  if (order.status !== "revision_requested") {
+    throw new HttpError(409, `Revision ack only from revision_requested (now ${order.status})`);
+  }
+  setStatus(order, "in_progress");
+  audit({
+    actorRole: "provider",
+    actorId: providerAgentId,
+    action: "revision.ack",
+    orderId,
+    detail: { revisionsRemaining: order.revisionsRemaining },
   });
   saveDb();
   return order;

@@ -4,6 +4,7 @@ import { getDb } from "../store.js";
 import { SEED } from "../seed.js";
 import {
   acceptOrder,
+  ackRevision,
   cancelOrder,
   confirmOrder,
   createOrder,
@@ -46,6 +47,10 @@ orderRoutes.post("/orders", async (c) => {
       taskSummary: string;
       taskContext?: string;
       asQuoted?: boolean;
+      revisions?: number;
+      dueAt?: string;
+      dueInHours?: number;
+      slaHours?: number;
     }>();
     const a = actor(c);
     const order = createOrder({
@@ -56,6 +61,10 @@ orderRoutes.post("/orders", async (c) => {
       taskSummary: body.taskSummary,
       taskContext: body.taskContext,
       asQuoted: body.asQuoted,
+      revisions: body.revisions,
+      dueAt: body.dueAt,
+      dueInHours: body.dueInHours,
+      slaHours: body.slaHours,
     });
     return c.json({ order }, 201);
   } catch (e) {
@@ -88,7 +97,6 @@ orderRoutes.get("/orders/:id", (c) => {
 orderRoutes.get("/orders/:id/confirm", async (c) => {
   try {
     const { order, confirm } = getConfirm(c.req.param("id"));
-    // ensure verify status fresh
     return c.json({ order, confirm, mustShowProvider: true });
   } catch (e) {
     return handleErr(c, e);
@@ -99,7 +107,6 @@ orderRoutes.post("/orders/:id/confirm", async (c) => {
   try {
     const body = await c.req.json<{ decision: "approve" | "reject"; userId?: string }>();
     const userId = body.userId ?? SEED.userId;
-    // × / close = reject
     const decision = body.decision === "approve" ? "approve" : "reject";
     const order = confirmOrder(c.req.param("id"), decision, userId);
     const escrow = order.escrowId ? getDb().escrows[order.escrowId] : null;
@@ -143,8 +150,28 @@ orderRoutes.post("/orders/:id/deliver", async (c) => {
 
 orderRoutes.post("/orders/:id/acceptance", async (c) => {
   try {
-    const body = await c.req.json<{ decision: "satisfied" | "reject" | "revise"; userId?: string }>();
-    const order = acceptOrder(c.req.param("id"), body.userId ?? SEED.userId, body.decision);
+    const body = await c.req.json<{
+      decision: "satisfied" | "reject" | "revise";
+      userId?: string;
+      note?: string;
+    }>();
+    const order = acceptOrder(
+      c.req.param("id"),
+      body.userId ?? SEED.userId,
+      body.decision,
+      body.note
+    );
+    const escrow = order.escrowId ? getDb().escrows[order.escrowId] : null;
+    return c.json({ order, escrow });
+  } catch (e) {
+    return handleErr(c, e);
+  }
+});
+
+orderRoutes.post("/orders/:id/revision/ack", async (c) => {
+  try {
+    const a = actor(c);
+    const order = ackRevision(c.req.param("id"), a.id);
     const escrow = order.escrowId ? getDb().escrows[order.escrowId] : null;
     return c.json({ order, escrow });
   } catch (e) {
@@ -160,7 +187,6 @@ orderRoutes.post("/orders/:id/quote", async (c) => {
     }
     const body = await c.req.json<{ quotedAmount?: number }>().catch(() => ({}));
     if (body.quotedAmount != null) order.pricing.quotedAmount = body.quotedAmount;
-    // use force via assert
     const { assertTransition } = await import("@agent-gig/shared");
     assertTransition(order.status, "quoted");
     order.status = "quoted";
@@ -197,7 +223,6 @@ orderRoutes.post("/escrow/:id/release", async (c) => {
       return c.json({ escrow, order, idempotent: true });
     }
     if (order.status !== "accepted_done" && order.status !== "delivered") {
-      // allow release only via acceptance path primarily
       if (order.status !== "accepted_done") {
         return c.json({ error: `Cannot release from order status ${order.status}`, code: "ILLEGAL_TRANSITION" }, 409);
       }

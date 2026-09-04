@@ -92,7 +92,7 @@ export default function ConfirmModal({
               <div className="faint">SLA</div>
               <div className="muted">
                 截止 {confirm.sla?.dueAt} · 验收 {confirm.sla?.acceptanceType} ·{" "}
-                <strong>修改次数 0（V0）</strong>
+                修改次数 <strong>{confirm.sla?.revisions ?? 0}</strong>
               </div>
             </section>
             {err && <div className="banner error">{err}</div>}
