@@ -78,9 +78,17 @@ export default function OrderPage() {
       </p>
 
       {showRevisionBanner && (
-        <div className="banner warn">
-          修改中 · 剩余免费修改 {remaining} 次。托管仍锁定，本次修改不另扣款。
-          {order.revisionNote ? ` 说明：${order.revisionNote}` : ""}
+        <div className="banner info" role="status">
+          <div>修改中 · 剩余免费修改 {remaining} 次</div>
+          <p className="banner-sub">托管仍锁定，本次修改不另扣款；等待对方新交付</p>
+          {order.revisionNote ? <p className="banner-sub">说明：{order.revisionNote}</p> : null}
+        </div>
+      )}
+
+      {order.status === "delivered" && remaining <= 0 && (
+        <div className="banner info" role="status">
+          <div>剩余免费修改 0 次 · 不可再请求修改</div>
+          <p className="banner-sub">可拒收后退款，或满意后放款；如需继续合作请新开单</p>
         </div>
       )}
 
@@ -112,7 +120,7 @@ export default function OrderPage() {
               )
             }
           >
-            提交交付
+            {showRevisionBanner ? "请按说明修改后再次交付" : "提交交付"}
           </button>
         )}
         {(order.status === "quoted" || order.status === "accepted") && (

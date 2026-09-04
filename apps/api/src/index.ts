@@ -32,6 +32,7 @@ app.get("/v0/meta", (c) => {
       currency: "GigUSD",
       takeRateBps: 1000,
       revisionsDefault: 1,
+      revisionsMax: 1,
     },
   });
 });

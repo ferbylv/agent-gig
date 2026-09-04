@@ -189,19 +189,16 @@ export default function PassportPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="revisions">修改次数</label>
-            <input
-              id="revisions"
-              type="number"
-              min={1}
-              max={1}
-              step="1"
-              value={1}
-              readOnly
-              disabled
-              title="S1：修改次数固定为 1"
-            />
-            <span className="faint">含 1 次免费修改；用尽后需拒收或新开单（S1 上限 1）。</span>
+            <span id="revisions-label">修改次数</span>
+            <div
+              className="revisions-ro"
+              role="text"
+              aria-labelledby="revisions-label"
+              aria-label="修改次数（S1 上限 1）"
+            >
+              1
+            </div>
+            <span className="faint">含 1 次免费修改；用尽后需拒收或新开单</span>
           </div>
           {formErr && <div className="banner error">{formErr}</div>}
           <button className="btn primary" type="submit" disabled={status !== "active" || busy}>

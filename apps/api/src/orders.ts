@@ -1,6 +1,7 @@
 import {
   assertTransition,
   REVISIONS_DEFAULT,
+  REVISIONS_MAX,
   verifyPassport,
   type ConfirmPayload,
   type Order,
@@ -51,7 +52,8 @@ function normalizeRevisions(raw: unknown): number {
   if (!Number.isInteger(n) || n < 0) {
     throw new HttpError(400, "revisions must be an integer >= 0", "INVALID_REVISIONS");
   }
-  return n;
+  // S1 freeze: cap at REVISIONS_MAX (default=1, max=1). Values >1 are clamped, not 400.
+  return Math.min(n, REVISIONS_MAX);
 }
 
 export function createOrder(input: {

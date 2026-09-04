@@ -135,6 +135,34 @@ a:hover { text-decoration: underline; }
 .banner.error { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(184,92,92,0.2); }
 .banner.ok { background: var(--verified-bg); color: var(--verified); border: 1px solid rgba(61,122,95,0.2); }
 .banner.warn { background: rgba(166,124,82,0.12); color: var(--warn); }
+.banner.info {
+  background: rgba(61, 90, 115, 0.08);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-weight: 500;
+}
+.banner.info .banner-sub {
+  color: var(--muted);
+  font-weight: 400;
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.revisions-ro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #F6F5F2;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 650;
+  user-select: none;
+}
+
 
 .accept-bar {
   position: sticky; bottom: 0; display: flex; gap: 10px; padding: 14px;

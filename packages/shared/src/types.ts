@@ -25,6 +25,8 @@ export type SkillVertical = (typeof SKILL_VERTICALS)[number];
 
 /** Platform default free revisions when create omits the field (V0.5-S1: was 0). */
 export const REVISIONS_DEFAULT = 1;
+/** S1 hard cap: create clamps revisions to this max (UI is read-only 1). Values > max are clamped, not rejected. */
+export const REVISIONS_MAX = 1;
 
 export interface Provider {
   providerId: string;
