@@ -16,6 +16,17 @@ export default function OrderPage() {
   const [portfolioItemId, setPortfolioItemId] = useState<string | null>(null);
   const [revokeOpen, setRevokeOpen] = useState(false);
   const [revokeBusy, setRevokeBusy] = useState(false);
+  const [existingReview, setExistingReview] = useState<any>(null);
+  const [reviewScores, setReviewScores] = useState({
+    quality: 5,
+    communication: 5,
+    punctuality: 5,
+    permissionHonesty: 5,
+  });
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replyBusy, setReplyBusy] = useState(false);
 
   async function reload() {
     const d = await api(`/v0/orders/${id}`);
@@ -25,6 +36,12 @@ export default function OrderPage() {
       setPortfolioItemId(d.order.portfolioItemId);
     } else if (d.order?.portfolioConsent?.revokedAt) {
       setPortfolioItemId(null);
+    }
+    try {
+      const rev = await api(`/v0/reviews?orderId=${id}`);
+      setExistingReview(rev.review ?? null);
+    } catch {
+      setExistingReview(null);
     }
   }
 
@@ -102,6 +119,52 @@ export default function OrderPage() {
       setMsg(e.message);
     } finally {
       setRevokeBusy(false);
+    }
+  }
+
+
+  async function submitReview() {
+    setReviewBusy(true);
+    setMsg(null);
+    try {
+      const d = await api(`/v0/reviews`, {
+        method: "POST",
+        role: "user",
+        actorId: order.parties.hirerUserId,
+        body: JSON.stringify({
+          orderId: order.orderId,
+          scores: reviewScores,
+          comment: reviewComment.trim() || undefined,
+          hirerUserId: order.parties.hirerUserId,
+        }),
+      });
+      setExistingReview(d.review);
+      setMsg("已提交，感谢反馈");
+    } catch (e: any) {
+      setMsg(e.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  async function submitReply() {
+    if (!existingReview?.reviewId) return;
+    setReplyBusy(true);
+    setMsg(null);
+    try {
+      const d = await api(`/v0/reviews/${existingReview.reviewId}/reply`, {
+        method: "POST",
+        role: "provider",
+        actorId: order.parties.providerAgentId,
+        body: JSON.stringify({ text: replyText }),
+      });
+      setExistingReview(d.review);
+      setReplyText("");
+      setMsg("已回复（仅一次）");
+    } catch (e: any) {
+      setMsg(e.message);
+    } finally {
+      setReplyBusy(false);
     }
   }
 
@@ -249,6 +312,93 @@ export default function OrderPage() {
         </div>
       )}
 
+
+      {order.status === "released" && (
+        <div className="card" style={{ marginTop: 16, background: "var(--surface, #fff)" }}>
+          <h2 className="h2">评价本单服务</h2>
+          {!existingReview ? (
+            <>
+              <p className="muted">四维必填（1–5）；文字可选。一单一评，差评不可删。</p>
+              {(
+                [
+                  ["quality", "质量"],
+                  ["communication", "沟通"],
+                  ["punctuality", "准时"],
+                  ["permissionHonesty", "权限诚实"],
+                ] as const
+              ).map(([key, label]) => (
+                <div key={key} className="field">
+                  <label>{label}</label>
+                  <div className="star-row">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={reviewScores[key] === n ? "on" : ""}
+                        onClick={() => setReviewScores((s) => ({ ...s, [key]: n }))}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="field">
+                <label htmlFor="reviewComment">文字（可选）</label>
+                <textarea
+                  id="reviewComment"
+                  rows={3}
+                  maxLength={500}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                />
+              </div>
+              <button className="btn primary" type="button" disabled={reviewBusy} onClick={submitReview}>
+                {reviewBusy ? "提交中…" : "提交评价"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="muted">本单已评价（只读）</p>
+              <div className="review-scores">
+                <span>质量 {existingReview.scores.quality}</span>
+                <span>沟通 {existingReview.scores.communication}</span>
+                <span>准时 {existingReview.scores.punctuality}</span>
+                <span>权限诚实 {existingReview.scores.permissionHonesty}</span>
+              </div>
+              {existingReview.comment && <p>{existingReview.comment}</p>}
+              {existingReview.providerReply ? (
+                <div className="review-reply">
+                  <div className="faint">服务方回复（仅一次）</div>
+                  <div>{existingReview.providerReply.text}</div>
+                </div>
+              ) : (
+                <div style={{ marginTop: 12 }}>
+                  <div className="faint">服务方回复（仅一次）</div>
+                  <textarea
+                    rows={2}
+                    maxLength={500}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="接单方可在此回复一次"
+                    style={{ width: "100%", marginTop: 6 }}
+                  />
+                  <button
+                    className="btn"
+                    type="button"
+                    style={{ marginTop: 8 }}
+                    disabled={replyBusy || !replyText.trim()}
+                    onClick={submitReply}
+                  >
+                    {replyBusy ? "提交中…" : "回复"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       <p style={{ marginTop: 18 }}>
         <Link to="/audit">查看审计</Link>
         {" · "}
@@ -320,7 +470,7 @@ export default function OrderPage() {
               <input type="checkbox" checked={homepage} onChange={(e) => setHomepage(e.target.checked)} />
               <span>允许平台首页/推荐位展示</span>
             </label>
-            <p className="faint">本卡不含评价；评价将在 S3 开放。</p>
+            <p className="faint">本卡不含评价；放款后可在订单页提交四维评价。</p>
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <button className="btn primary" type="button" disabled={consentBusy} onClick={() => submitConsent(false)}>
                 {consentBusy ? "保存中…" : "保存授权"}

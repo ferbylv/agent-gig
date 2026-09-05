@@ -101,12 +101,13 @@ async function main() {
   await ensureListing();
 
   console.log("\n[S2-1 listing aggregate three columns]");
-  await test("S2-1 GET listings/:did has portfolio + reviewsComingSoon", async () => {
+  await test("S2-1 GET listings/:did has portfolio + reviews aggregate", async () => {
     const r = await req(`/v0/listings/${encodeURIComponent(PROVIDER)}`);
     assert(r.status === 200, "200");
     assert(Array.isArray(r.data.portfolio), "portfolio array");
     assert(Array.isArray(r.data.reviews), "reviews array");
-    assert(r.data.reviewsComingSoon === true, "reviewsComingSoon");
+    // S3 wires real reviews; coming-soon placeholder removed
+    assert(r.data.reviewsComingSoon !== true, "no S2 coming-soon placeholder");
     assert(r.data.passport?.provider?.legalName, "provider legal name still present");
   });
 
@@ -258,7 +259,7 @@ async function main() {
   });
 
   console.log("\n[S2-7/8 freezes]");
-  await test("S2-7 confirm still has provider; no review POST", async () => {
+  await test("S2-7 confirm still has provider; review requires released order", async () => {
     const created = await req("/v0/orders", {
       method: "POST",
       role: "hirer",
@@ -277,12 +278,13 @@ async function main() {
       body: JSON.stringify({ decision: "reject", userId: USER }),
     });
 
+    // S3: review endpoint exists but rejects non-released / missing order
     const rev = await fetch(`${BASE}/v0/reviews`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId: "x", scores: {} }),
+      headers: { "Content-Type": "application/json", "X-Actor-Role": "user", "X-Actor-Id": USER },
+      body: JSON.stringify({ orderId: "ord_nonexistent", scores: { quality: 5, communication: 5, punctuality: 5, permissionHonesty: 5 } }),
     });
-    assert(rev.status === 404 || rev.status >= 400, "review POST not implemented");
+    assert(rev.status >= 400, "invalid review still 4xx");
   });
 
   await test("S2 schema helpers round-trip via public item shape", async () => {
@@ -295,7 +297,8 @@ async function main() {
     assert(up.status === 201, "created private self");
     const list = await req(`/v0/portfolio/${encodeURIComponent(PROVIDER)}`);
     assert(!list.data.items?.some((i: any) => i.itemId === up.data.item.itemId), "false consent hidden");
-    assert(list.data.reviewsComingSoon === true, "coming soon");
+    assert(Array.isArray(list.data.reviews), "reviews array present");
+    assert(list.data.reviewsComingSoon !== true, "no coming soon");
   });
 
   console.log(`\nResult: ${passed} passed, ${failed} failed`);

@@ -28,7 +28,13 @@ export default function ConfirmModal({
       });
       onDone(res.order);
     } catch (e: any) {
-      setErr(e.message);
+      if (e.code === "BLACKLISTED") {
+        setErr("无法雇佣：对方在平台限制名单中。未锁定费用；可更换服务方后重试");
+      } else if (e.code === "SELF_HIRE") {
+        setErr("无法雇佣：禁止同主人自雇");
+      } else {
+        setErr(e.message);
+      }
     } finally {
       setBusy(false);
     }

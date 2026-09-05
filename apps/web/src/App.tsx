@@ -7,6 +7,7 @@ import AuditPage from "./pages/AuditPage";
 import ConnectPage from "./pages/ConnectPage";
 import ErrorPage from "./pages/ErrorPage";
 import HomePage from "./pages/HomePage";
+import RankPage from "./pages/RankPage";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         </Link>
         <nav>
           <NavLink to="/search">检索</NavLink>
+          <NavLink to="/ranks">垂直榜</NavLink>
           <NavLink to="/budget">额度</NavLink>
           <NavLink to="/connect">连接</NavLink>
           <NavLink to="/audit">审计</NavLink>
@@ -25,6 +27,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/ranks" element={<RankPage />} />
         <Route path="/a/:did" element={<PassportPage />} />
         <Route path="/passports/:did" element={<PassportPage />} />
         <Route path="/budget" element={<BudgetPage />} />

@@ -271,3 +271,222 @@ export function isPubliclyVisiblePortfolioItem(item: PortfolioItem): boolean {
   if (item.consent.revokedAt) return false;
   return true;
 }
+
+/** Review / Rank / Blacklist (V0.5-S3) */
+
+export const REVIEW_SCORE_DIMS = [
+  "quality",
+  "communication",
+  "punctuality",
+  "permissionHonesty",
+] as const;
+export type ReviewScoreDim = (typeof REVIEW_SCORE_DIMS)[number];
+
+export interface ReviewScores {
+  quality: number;
+  communication: number;
+  punctuality: number;
+  permissionHonesty: number;
+}
+
+export interface ProviderReply {
+  text: string;
+  repliedAt: string;
+}
+
+/**
+ * Review entity. orderId is UNIQUE — one primary review per order (no DELETE).
+ * disputedTag intentionally omitted (V1).
+ */
+export interface Review {
+  reviewId: string;
+  /** Unique: at most one review per order */
+  orderId: string;
+  hirerUserId: string;
+  hirerAgentId: string;
+  providerDid: string;
+  scores: ReviewScores;
+  comment?: string;
+  createdAt: string;
+  /** At most one reply; no edit/delete of hirer review */
+  providerReply?: ProviderReply;
+}
+
+export const REVIEW_COMMENT_MAX = 500;
+export const REVIEW_REPLY_MAX = 500;
+
+/** Frozen S3 rank weights (PRD §12.3) */
+export const RANK_WEIGHTS_DEFAULT = {
+  w1: 0.25, // completionRate
+  w2: 0.35, // avgMultiDimScore
+  w3: 0.15, // repurchaseRate
+  w4: 0.1, // responseSpeedNorm
+  w5: 0.15, // disputeRate (subtracted)
+} as const;
+
+export type RankWeights = {
+  w1: number;
+  w2: number;
+  w3: number;
+  w4: number;
+  w5: number;
+};
+
+/** Preferred badge threshold (completed released orders) */
+export const PREFERRED_COMPLETED_N = 10;
+/** New accounts with fewer completed orders cannot enter tier=top */
+export const TOP_TIER_MIN_COMPLETED = 10;
+
+export type RankTier = "top" | "explore";
+
+export interface RankFactors {
+  completionRate: number;
+  avgMultiDimScore: number;
+  repurchaseRate: number;
+  responseSpeedNorm: number;
+  /** No dispute data in S3 → 0 */
+  disputeRate: number;
+  /** Default 0; self-hire blocked separately */
+  sybilPenalty: number;
+}
+
+export interface RankScore {
+  did: string;
+  skill: string;
+  score: number;
+  factors: RankFactors;
+  completedReleasedCount: number;
+  preferredBadge: boolean;
+  bondStub?: boolean;
+  tier: RankTier;
+  updatedAt: string;
+}
+
+export interface BlacklistEntry {
+  id: string;
+  did?: string;
+  userId?: string;
+  providerId?: string;
+  reason: string;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface ReviewSummary {
+  count: number;
+  avgQuality: number;
+  avgCommunication: number;
+  avgPunctuality: number;
+  avgPermissionHonesty: number;
+  /** Mean of four dim averages (0 if empty) */
+  avgOverall: number;
+}
+
+export function isValidReviewScore(n: unknown): n is number {
+  return typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= 5;
+}
+
+export function parseReviewScores(raw: unknown): ReviewScores | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const scores: Partial<ReviewScores> = {};
+  for (const dim of REVIEW_SCORE_DIMS) {
+    if (!isValidReviewScore(o[dim])) return null;
+    scores[dim] = o[dim] as number;
+  }
+  return scores as ReviewScores;
+}
+
+export function avgMultiDimScore(scores: ReviewScores): number {
+  return (
+    (scores.quality +
+      scores.communication +
+      scores.punctuality +
+      scores.permissionHonesty) /
+    4
+  );
+}
+
+/** Normalize 1–5 average to 0–1 for rank formula */
+export function normalizeAvgToUnit(avg1to5: number): number {
+  if (avg1to5 <= 0) return 0;
+  return Math.min(1, Math.max(0, (avg1to5 - 1) / 4));
+}
+
+/**
+ * score = w1*completionRate + w2*avgMultiDim(0-1) + w3*repurchaseRate
+ *       + w4*responseSpeedNorm - w5*disputeRate - sybilPenalty
+ */
+export function computeRankNumeric(
+  factors: RankFactors,
+  weights: RankWeights = RANK_WEIGHTS_DEFAULT
+): number {
+  // avgMultiDimScore is on 1–5 scale (0 when no reviews → contributes 0)
+  const avgUnit = normalizeAvgToUnit(factors.avgMultiDimScore);
+  return (
+    weights.w1 * clamp01(factors.completionRate) +
+    weights.w2 * avgUnit +
+    weights.w3 * clamp01(factors.repurchaseRate) +
+    weights.w4 * clamp01(factors.responseSpeedNorm) -
+    weights.w5 * clamp01(factors.disputeRate) -
+    (factors.sybilPenalty || 0)
+  );
+}
+
+function clamp01(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(1, Math.max(0, n));
+}
+
+export function summarizeReviews(reviews: Review[]): ReviewSummary {
+  const count = reviews.length;
+  if (count === 0) {
+    return {
+      count: 0,
+      avgQuality: 0,
+      avgCommunication: 0,
+      avgPunctuality: 0,
+      avgPermissionHonesty: 0,
+      avgOverall: 0,
+    };
+  }
+  let q = 0,
+    c = 0,
+    p = 0,
+    h = 0;
+  for (const r of reviews) {
+    q += r.scores.quality;
+    c += r.scores.communication;
+    p += r.scores.punctuality;
+    h += r.scores.permissionHonesty;
+  }
+  const avgQuality = q / count;
+  const avgCommunication = c / count;
+  const avgPunctuality = p / count;
+  const avgPermissionHonesty = h / count;
+  const avgOverall =
+    (avgQuality + avgCommunication + avgPunctuality + avgPermissionHonesty) / 4;
+  return {
+    count,
+    avgQuality,
+    avgCommunication,
+    avgPunctuality,
+    avgPermissionHonesty,
+    avgOverall,
+  };
+}
+
+export function resolveRankTier(
+  completedReleasedCount: number,
+  score: number,
+  minCompleted = TOP_TIER_MIN_COMPLETED
+): RankTier {
+  if (completedReleasedCount < minCompleted) return "explore";
+  // Simple: top if completed enough and score in upper band; otherwise explore
+  if (score >= 0.55) return "top";
+  return "explore";
+}
+
+export function preferredBadgeFor(completedReleasedCount: number, n = PREFERRED_COMPLETED_N): boolean {
+  return completedReleasedCount >= n;
+}

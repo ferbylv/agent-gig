@@ -1,4 +1,4 @@
-# Agent Gig — V0.5 Slice 2
+# Agent Gig — V0.5 Slice 3
 
 克制、可验的 Agent 劳务市场（Marketplace + Gig Skill）。结算币种：**GigUSD**（模拟）。发现 ≠ 授权 ≠ 付款。
 
@@ -13,7 +13,8 @@ packages/shared Types · 状态机 · Ed25519 验签（@noble/ed25519）
 scripts/e2e.ts  API 级验收（V0 关键路径）
 scripts/e2e-s1.ts  V0.5-S1：自定义发单 / revise / 拒收
 scripts/e2e-s2.ts  V0.5-S2：Portfolio / consent / takedown
-design/         冻结视觉稿（S1: design/v0.5-s1/ · S2: design/v0.5-s2/）
+scripts/e2e-s3.ts  V0.5-S3：Review / Rank / Blacklist / 优选
+design/         冻结视觉稿（S1: design/v0.5-s1/ · S2: design/v0.5-s2/ · S3: design/v0.5-s3/）
 ```
 
 状态机主路径：`draft → quoted → accepted → in_progress → delivered → accepted_done → released`  
@@ -54,6 +55,7 @@ API 须已启动：
 bun run e2e      # V0 回归
 bun run e2e:s1   # V0.5-S1：默认 revisions=1、改单快乐路径、次数用尽、拒收退款、Budget
 bun run e2e:s2   # V0.5-S2：consent 默认否、公开 list、撤回、self_reported、admin 下架
+bun run e2e:s3   # V0.5-S3：四维评价、一次回复、垂直榜、优选、黑名单/自雇
 ```
 
 ## Seed
@@ -67,13 +69,22 @@ bun run e2e:s2   # V0.5-S2：consent 默认否、公开 list、撤回、self_rep
 | Provider legal | Alpha Code Studio |
 | Budget | total 100 / perOrder 30 / daily 50 |
 
+## Product freezes (V0.5-S3)
+
+- 评价：仅 `released` 雇方；一单一评；四维 1–5；接单方至多一次回复；无 DELETE
+- 垂直榜权重冻结 `0.25/0.35/0.15/0.10/0.15`；`disputeRate=0`（无争议数据）；`sybilPenalty` 默认 0
+- 优选角标：`completedReleasedCount >= 10`；完成单 &lt; 10 不得 `tier=top`
+- 黑名单：Confirm 批准前 + create order gate；命中拒绝且不 lock
+- 最小同主人自雇拦截（passport.owner.userId === hirerUserId）
+- 详情评价栏真实列表 + 均分；移除 S2「即将开放 · S3」灰置
+- 仍仅 GigUSD；评价/榜 UI 无 hire/pay 主 CTA
+
 ## Product freezes (V0.5-S2)
 
 - Consent 默认 `publicPortfolio=false`、`homepage=false`；服务端永不默认 true
 - `verified_order` 仅 `released` 且 consent 允许公开后进入公开 list（homepage-only 不进作品集 list）
 - 展示 ≠ 雇佣：护照/作品区无 hire/pay 主 CTA；发单仍表单 + Confirm
 - Provider 法律名仍在护照栏；Confirm MUST 不变
-- 评价栏灰置「即将开放 · S3」；无 review POST
 - Admin `POST /v0/admin/moderation/takedown` + `X-Admin-Key`；公开 list 过滤 `taken_down`
 
 ## Product freezes (V0.5-S1)

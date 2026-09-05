@@ -6,12 +6,13 @@ import { passportRoutes } from "./routes/passports.js";
 import { skillRoutes } from "./routes/skill.js";
 import { orderRoutes } from "./routes/orders.js";
 import { portfolioRoutes } from "./routes/portfolio.js";
+import { reviewRoutes } from "./routes/reviews.js";
 
 const app = new Hono();
 
 app.use("*", cors({ origin: "*" }));
 
-app.get("/health", (c) => c.json({ ok: true, service: "agent-gig-api", version: "v0.5-s2" }));
+app.get("/health", (c) => c.json({ ok: true, service: "agent-gig-api", version: "v0.5-s3" }));
 
 app.get("/v0/meta", (c) => {
   const db = getDb();
@@ -28,6 +29,9 @@ app.get("/v0/meta", (c) => {
       orders: Object.keys(db.orders).length,
       escrows: Object.keys(db.escrows).length,
       portfolio: Object.keys(db.portfolio ?? {}).length,
+      reviews: Object.keys(db.reviews ?? {}).length,
+      ranks: Object.keys(db.ranks ?? {}).length,
+      blacklist: (db.blacklist ?? []).length,
     },
     notes: {
       skillNeverHoldsKeys: true,
@@ -43,6 +47,7 @@ app.route("/v0", passportRoutes);
 app.route("/v0", skillRoutes);
 app.route("/v0", orderRoutes);
 app.route("/v0", portfolioRoutes);
+app.route("/v0", reviewRoutes);
 
 const port = Number(process.env.PORT ?? 8787);
 

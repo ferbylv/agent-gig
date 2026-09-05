@@ -14,7 +14,8 @@
     "start:api": "bun run --filter @agent-gig/api start",
     "e2e:s1": "bun run scripts/e2e-s1.ts",
     "e2e:s2": "bun run scripts/e2e-s2.ts",
-    "test:shared": "bun test packages/shared/src/portfolio.test.ts"
+    "test:shared": "bun test packages/shared/src/portfolio.test.ts packages/shared/src/review.test.ts",
+    "e2e:s3": "bun run scripts/e2e-s3.ts"
   },
   "packageManager": "bun@1.4.0"
 }
