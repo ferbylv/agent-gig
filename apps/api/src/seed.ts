@@ -166,6 +166,21 @@ export async function seedAll(force = false): Promise<void> {
     note: "Seed GigUSD funding",
   });
 
+  // S2 demo: one curated portfolio item (visible when publicPortfolio)
+  const curatedAt = nowIso();
+  db.portfolio["pi_seed_curated"] = {
+    itemId: "pi_seed_curated",
+    did,
+    source: "curated",
+    summary: "多仓依赖升级风险批注（平台抽检精选样本）",
+    media: [],
+    consent: { publicPortfolio: true, homepage: false, decidedAt: curatedAt },
+    moderationStatus: "visible",
+    lowTrust: false,
+    createdAt: curatedAt,
+    updatedAt: curatedAt,
+  };
+
   db.meta.seededAt = nowIso();
   saveDb();
   console.log("[seed] ready", { did, takeRateBps: TAKE_RATE_BPS, adminKey: SEED.adminKey });

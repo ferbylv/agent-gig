@@ -136,6 +136,8 @@ export interface Order {
   revisionNote?: string;
   /** Set on acceptance.satisfied (V0.5-S2); defaults both false */
   portfolioConsent?: PortfolioConsent;
+  /** Linked verified_order PortfolioItem when created */
+  portfolioItemId?: string;
 }
 
 export interface ConfirmPayload {

@@ -3,17 +3,46 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import ConfirmModal from "../components/ConfirmModal";
 
-function sourceBadge(source: string) {
+function SourceBadge({ source }: { source: string }) {
   if (source === "verified_order") {
-    return { cls: "badge source-verified", text: "成单验证", title: "经平台成单验收并获授权" };
+    return (
+      <span className="badge source-verified" title="verified_order · 经平台成单验收并获授权">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.2l4.2 1.6v3.1c0 2.4-1.7 3.9-4.2 4.9C3.5 9.8 1.8 8.3 1.8 5.9V2.8L6 1.2z"/><path d="M3.8 5.9l1.5 1.5 2.9-3" fill="none" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        成单验证
+      </span>
+    );
   }
   if (source === "self_reported") {
-    return { cls: "badge source-self", text: "自荐上传 · 低信任", title: "由服务方自行上传，未经成单验证" };
+    return (
+      <span className="badge source-self" title="self_reported · 由服务方自行上传，未经成单验证">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.6 L10.6 10.2 H1.4 Z"/><path d="M6 4.6v2.4M6 8.6h.01"/></svg>
+        自荐上传 · 低信任
+      </span>
+    );
   }
   if (source === "curated") {
-    return { cls: "badge source-curated", text: "平台精选", title: "平台抽检精选" };
+    return (
+      <span className="badge source-curated" title="curated · 平台抽检精选">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4l1.4 2.9 3.2.4-2.3 2.2.6 3.2L6 8.5 3.1 10.1l.6-3.2L1.4 4.7l3.2-.4z"/></svg>
+        平台精选
+      </span>
+    );
   }
-  return { cls: "badge", text: source, title: source };
+  return <span className="badge">{source}</span>;
+}
+
+function thumbLetter(source: string) {
+  if (source === "verified_order") return "验";
+  if (source === "self_reported") return "自";
+  if (source === "curated") return "精";
+  return "作";
+}
+
+function helperFor(source: string) {
+  if (source === "verified_order") return "经平台成单验收并获授权";
+  if (source === "self_reported") return "由服务方自行上传，未经成单验证";
+  if (source === "curated") return "平台抽检精选";
+  return "";
 }
 
 export default function PassportPage() {
@@ -147,14 +176,21 @@ export default function PassportPage() {
           <div className="faint">短 URI / QR 载荷</div>
           <code style={{ fontSize: 12 }}>{data.uris?.agentpass}</code>
         </div>
-        <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <a className="btn" href={`/v0/passports/${encodeURIComponent(did)}/export.json`} target="_blank" rel="noreferrer">
-            导出 passport.json
-          </a>
-          <Link className="btn" to="/search">返回检索</Link>
+        <div className="passport-foot">
+          <span className={`status-pill ${status === "active" ? "on" : ""}`}>
+            <span className="dot" />
+            {status === "active" ? "接单中" : status}
+          </span>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <a className="quiet-link" href="#hire-form">发起雇佣（表单）</a>
+            <a className="quiet-link" href={`/v0/passports/${encodeURIComponent(did)}/export.json`} target="_blank" rel="noreferrer">
+              导出
+            </a>
+            <Link className="quiet-link" to="/search">返回检索</Link>
+          </div>
         </div>
-        <p className="faint" style={{ marginTop: 16 }}>
-          名片 ≠ 授权 ≠ 付款。本卡<strong>无雇佣/付款主按钮</strong>。浏览作品不等于雇佣；发单请使用下方发单区。
+        <p className="faint" style={{ marginTop: 14 }}>
+          名片 ≠ 授权 ≠ 付款。护照/作品区<strong>无雇佣付款主 CTA</strong>。
         </p>
       </div>
     </div>
@@ -163,45 +199,57 @@ export default function PassportPage() {
   const portfolioCol = (
     <div className="detail-col">
       <div className="detail-col-title">作品</div>
-      <div className="card detail-col-body">
+      <div className="card detail-col-body panel-surface">
+        <p className="works-helper">浏览作品不等于雇佣；发单请使用下方发单区</p>
         {portfolio.length === 0 ? (
           <div className="empty-state">
+            <div className="empty-ico" aria-hidden="true">◎</div>
             <p className="muted" style={{ margin: 0 }}>还没有获授权的公开作品</p>
             <p className="faint" style={{ marginTop: 8 }}>成单并授权后将出现在此。默认不公开。</p>
           </div>
         ) : (
           <div className="portfolio-list">
             {portfolio.map((item: any) => {
-              const b = sourceBadge(item.source);
+              const cardCls = [
+                "portfolio-card",
+                item.source === "self_reported" ? "is-self" : "",
+                item.source === "curated" ? "is-curated" : "",
+                item.source === "verified_order" ? "is-verified" : "",
+              ].filter(Boolean).join(" ");
               return (
-                <article key={item.itemId} className={`portfolio-card ${item.source === "self_reported" ? "low-trust" : ""}`}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                    <span className={b.cls} title={b.title}>{b.text}</span>
-                    <span className="faint">{item.createdAt?.slice(0, 10)}</span>
+                <article key={item.itemId} className={cardCls}>
+                  <div className={`work-thumb ${item.source === "verified_order" ? "v" : item.source === "curated" ? "c" : "s"}`} aria-hidden="true">
+                    {thumbLetter(item.source)}
                   </div>
-                  <p style={{ margin: "10px 0 0", fontSize: 14 }}>{item.summary}</p>
-                  {item.orderId && <p className="faint" style={{ marginTop: 6 }}>关联订单 {item.orderId}</p>}
-                  {item.source === "self_reported" && (
-                    <p className="faint" style={{ marginTop: 6 }}>由服务方自行上传，未经成单验证</p>
-                  )}
+                  <div className="work-body">
+                    <h3 className="work-title">{item.summary}</h3>
+                    <p className="work-summary">{helperFor(item.source)}</p>
+                    <div className="work-meta">
+                      <SourceBadge source={item.source} />
+                      {item.orderId && <span className="work-order">{item.orderId}</span>}
+                      <span className="work-time">{item.createdAt?.slice(0, 10)}</span>
+                    </div>
+                  </div>
                 </article>
               );
             })}
           </div>
         )}
-        <p className="faint" style={{ marginTop: 14 }}>作品区无付款主按钮；雇佣请走下方表单 + Confirm。</p>
       </div>
     </div>
   );
 
   const reviewsCol = (
     <div className="detail-col">
-      <div className="detail-col-title muted-title">评价</div>
+      <div className="detail-col-title muted-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        评价
+        <span className="badge soon">即将开放 · S3</span>
+      </div>
       <div className="card detail-col-body reviews-soon">
         <div className="reviews-placeholder">
-          <span className="badge soon">即将开放 · S3</span>
-          <p className="muted" style={{ marginTop: 12 }}>评价与完成率将在下一版本开放（S3）</p>
-          <p className="faint">本栏为占位，不可打分、不可提交评价。</p>
+          <div className="reviews-ico" aria-hidden="true">☰</div>
+          <p className="muted" style={{ marginTop: 12, textAlign: "center" }}>评价与完成率将在下一版本开放（S3）</p>
+          <p className="faint" style={{ textAlign: "center" }}>本栏为占位，不可打分、不可提交评价。</p>
         </div>
       </div>
     </div>
@@ -221,10 +269,10 @@ export default function PassportPage() {
         <div className={tab === "reviews" ? "detail-pane show" : "detail-pane"}>{reviewsCol}</div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2 className="h2">发起雇佣</h2>
+      <div className="card hire-zone" style={{ marginTop: 16 }} id="hire-form">
+        <h2 className="h2">发起雇佣（表单）</h2>
         <p className="muted" style={{ marginTop: 0 }}>
-          起价 {p.pricing?.models?.[0]?.price ?? "—"} GigUSD / 次。提交后将校验额度，并向主人弹出确认门；未确认不锁仓。
+          起价 {p.pricing?.models?.[0]?.price ?? "—"} GigUSD / 次。展示 ≠ 雇佣；提交后将校验额度，并向主人弹出确认门；未确认不锁仓。
         </p>
         {status !== "active" && (
           <div className="banner error">挂牌状态为 {status}，不可接新单。</div>

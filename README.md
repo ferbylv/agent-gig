@@ -13,7 +13,7 @@ packages/shared Types · 状态机 · Ed25519 验签（@noble/ed25519）
 scripts/e2e.ts  API 级验收（V0 关键路径）
 scripts/e2e-s1.ts  V0.5-S1：自定义发单 / revise / 拒收
 scripts/e2e-s2.ts  V0.5-S2：Portfolio / consent / takedown
-design/         冻结视觉稿（参考；S1 见 design/v0.5-s1/）
+design/         冻结视觉稿（S1: design/v0.5-s1/ · S2: design/v0.5-s2/）
 ```
 
 状态机主路径：`draft → quoted → accepted → in_progress → delivered → accepted_done → released`  

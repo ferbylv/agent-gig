@@ -459,6 +459,7 @@ export function createVerifiedPortfolioItem(order: Order, consent: PortfolioCons
   if (existing) {
     existing.consent = { ...consent };
     existing.updatedAt = nowIso();
+    order.portfolioItemId = existing.itemId;
     return existing;
   }
   const summary =
@@ -479,6 +480,7 @@ export function createVerifiedPortfolioItem(order: Order, consent: PortfolioCons
     updatedAt: nowIso(),
   };
   db.portfolio[item.itemId] = item;
+  order.portfolioItemId = item.itemId;
   return item;
 }
 
