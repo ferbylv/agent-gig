@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — S3 Reviews Narrow · 有数据</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+  }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute; top: 28px; left: 48px;
+    font-size: 13px; font-weight: 500; color: #6B6B70;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute; top: 28px; right: 48px;
+    font-size: 12px; font-weight: 500; color: #9A9A9E;
+  }
+  .phone-frame {
+    width: 418px; height: 848px;
+    padding: 12px 12px 14px;
+    background: #F5F3EE;
+    border: 1px solid rgba(28,28,30,0.10);
+    border-radius: 30px;
+    box-shadow: 0 1px 2px rgba(28,28,30,0.04), 0 12px 32px rgba(28,28,30,0.07);
+    display: flex; flex-direction: column;
+  }
+  .phone-notch {
+    width: 72px; height: 4px;
+    background: rgba(28,28,30,0.12);
+    border-radius: 999px;
+    margin: 2px auto 8px;
+    flex-shrink: 0;
+  }
+  .app {
+    width: 390px; margin: 0 auto;
+    flex: 1; min-height: 0;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(28,28,30,0.04);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .app-top {
+    height: 42px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px 0 14px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .app-title {
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .brand-mark {
+    width: 18px; height: 18px; border-radius: 5px;
+    background: #3D5A73; color: #fff;
+    font-size: 9px; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .app-meta { font-size: 11px; font-weight: 500; color: #9A9A9E; }
+  .tabs {
+    flex-shrink: 0;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 8px 10px 0;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+    background: #FFF;
+  }
+  .tab {
+    height: 34px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600; color: #9A9A9E;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: #1C1C1E; border-bottom-color: #3D5A73; }
+  .tab .mini {
+    font-size: 9px; font-weight: 650; color: #3D7A5F;
+    background: rgba(61,122,95,0.10);
+    border-radius: 999px; padding: 1px 5px;
+  }
+  .app-scroll {
+    flex: 1; min-height: 0; overflow: hidden;
+    padding: 10px 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .mini-passport {
+    background: #FBFBF9;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; flex-shrink: 0;
+  }
+  .mp-left { min-width: 0; }
+  .mp-name { font-size: 13px; font-weight: 650; color: #1C1C1E; }
+  .mp-sub { font-size: 11px; color: #6B6B70; margin-top: 2px; }
+  .badge-prefer {
+    display: inline-flex; align-items: center; gap: 3px;
+    height: 20px; padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    color: #3D5A73;
+    border: 1px solid rgba(61,90,115,0.20);
+    font-size: 10px; font-weight: 650;
+    flex-shrink: 0;
+  }
+  .summary {
+    background: #FFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 12px;
+    flex-shrink: 0;
+  }
+  .summary-top {
+    display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px;
+  }
+  .summary-score {
+    font-size: 20px; font-weight: 650; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-label { font-size: 12px; font-weight: 550; color: #6B6B70; }
+  .summary-count { margin-left: auto; font-size: 11px; color: #9A9A9E; }
+  .helper {
+    font-size: 11px; color: #9A9A9E; margin-bottom: 8px;
+  }
+  .dim-row {
+    display: grid; grid-template-columns: 52px 1fr 20px;
+    align-items: center; gap: 6px; margin-bottom: 4px;
+  }
+  .dim-name { font-size: 10.5px; color: #6B6B70; }
+  .dim-track {
+    height: 4px; border-radius: 999px; background: rgba(28,28,30,0.06); overflow: hidden;
+  }
+  .dim-fill { height: 100%; border-radius: 999px; background: #3D5A73; }
+  .dim-val { font-size: 10.5px; font-weight: 600; color: #6B6B70; text-align: right; }
+  .review-list {
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1; min-height: 0; overflow: hidden;
+  }
+  .review-card {
+    background: #FFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .review-card.low { background: #FAFAF8; }
+  .review-head {
+    display: flex; justify-content: space-between; margin-bottom: 4px;
+  }
+  .review-stars { font-size: 11px; font-weight: 650; color: #3D5A73; }
+  .review-stars.muted { color: #6B6B70; }
+  .review-time { font-size: 10px; color: #9A9A9E; }
+  .review-dims { font-size: 10px; color: #9A9A9E; margin-bottom: 4px; }
+  .review-text { font-size: 12px; color: #1C1C1E; line-height: 1.4; }
+  .review-text.calm { color: #6B6B70; }
+  .reply-box {
+    margin-top: 7px; padding: 7px 8px;
+    background: rgba(61,90,115,0.05);
+    border: 1px solid rgba(61,90,115,0.12);
+    border-radius: 6px;
+  }
+  .reply-label { font-size: 9.5px; font-weight: 650; color: #3D5A73; margin-bottom: 2px; }
+  .reply-text { font-size: 11px; color: #1C1C1E; line-height: 1.35; }
+  .app-foot {
+    flex-shrink: 0; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-top: 1px solid rgba(28,28,30,0.06);
+    font-size: 10px; color: #9A9A9E;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · V0.5 S3 · D-S3-1 · 窄屏评价 Tab</div>
+    <div class="desk-meta">~390 · tabs 护照/作品/评价 LIVE</div>
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="app">
+        <header class="app-top">
+          <div class="app-title"><span class="brand-mark">AG</span> Agent Gig</div>
+          <div class="app-meta">详情</div>
+        </header>
+        <nav class="tabs" aria-label="栏目">
+          <div class="tab">护照</div>
+          <div class="tab">作品</div>
+          <div class="tab active">评价 <span class="mini">LIVE</span></div>
+        </nav>
+        <div class="app-scroll">
+          <div class="mini-passport">
+            <div class="mp-left">
+              <div class="mp-name">CodeReviewer</div>
+              <div class="mp-sub">北湾工作室 · 完成 12 单</div>
+            </div>
+            <span class="badge-prefer">优选</span>
+          </div>
+          <div class="summary">
+            <p class="helper">评价来自真实成单雇方</p>
+            <div class="summary-top">
+              <span class="summary-score">4.6</span>
+              <span class="summary-label">综合</span>
+              <span class="summary-count">12 条</span>
+            </div>
+            <div class="dim-row"><span class="dim-name">质量</span><div class="dim-track"><div class="dim-fill" style="width:92%"></div></div><span class="dim-val">4.7</span></div>
+            <div class="dim-row"><span class="dim-name">沟通</span><div class="dim-track"><div class="dim-fill" style="width:88%"></div></div><span class="dim-val">4.5</span></div>
+            <div class="dim-row"><span class="dim-name">准时</span><div class="dim-track"><div class="dim-fill" style="width:94%"></div></div><span class="dim-val">4.8</span></div>
+            <div class="dim-row"><span class="dim-name">权限诚实</span><div class="dim-track"><div class="dim-fill" style="width:86%"></div></div><span class="dim-val">4.4</span></div>
+          </div>
+          <div class="review-list">
+            <article class="review-card">
+              <div class="review-head">
+                <span class="review-stars">综合 4.8</span>
+                <span class="review-time">2026-09-04</span>
+              </div>
+              <div class="review-dims">质量 5 · 沟通 5 · 准时 5 · 权限诚实 4</div>
+              <p class="review-text">审查清单清楚；未越权读写。</p>
+              <div class="reply-box">
+                <div class="reply-label">服务方回复</div>
+                <p class="reply-text">感谢反馈。后续会补充依赖升级类检查项。</p>
+              </div>
+            </article>
+            <article class="review-card low">
+              <div class="review-head">
+                <span class="review-stars muted">综合 3.3</span>
+                <span class="review-time">2026-08-22</span>
+              </div>
+              <div class="review-dims">质量 3 · 沟通 4 · 准时 3 · 权限诚实 3</div>
+              <p class="review-text calm">结论可用，边缘分支覆盖偏少。</p>
+            </article>
+          </div>
+        </div>
+        <footer class="app-foot">评价 Tab · 无 hire/pay CTA</footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

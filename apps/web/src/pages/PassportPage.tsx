@@ -50,6 +50,9 @@ export default function PassportPage() {
   const did = decodeURIComponent(raw ?? "");
   const [data, setData] = useState<any>(null);
   const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<any>(null);
+  const [preferredBadge, setPreferredBadge] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [order, setOrder] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -65,6 +68,9 @@ export default function PassportPage() {
     const listing = await api(`/v0/listings/${encodeURIComponent(did)}`);
     setData(listing);
     setPortfolio(listing.portfolio ?? []);
+    setReviews(listing.reviews ?? []);
+    setReviewSummary(listing.reviewSummary ?? null);
+    setPreferredBadge(Boolean(listing.preferredBadge));
   }
 
   useEffect(() => {
@@ -136,7 +142,14 @@ export default function PassportPage() {
         setMsg("订单已创建");
       }
     } catch (ex: any) {
-      setFormErr(ex.message);
+      if (ex.code === "BLACKLISTED" || ex.code === "SELF_HIRE") {
+        setFormErr(
+          (ex.message || "无法雇佣") +
+            (ex.code === "BLACKLISTED" ? "（未锁定费用；可更换服务方后重试）" : "")
+        );
+      } else {
+        setFormErr(ex.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -146,7 +159,14 @@ export default function PassportPage() {
     <div className="detail-col">
       <div className="detail-col-title">护照</div>
       <div className="card detail-col-body">
-        <span className={`badge ${badge.cls}`}>{badge.text}</span>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span className={`badge ${badge.cls}`}>{badge.text}</span>
+          {preferredBadge && (
+            <span className="badge preferred" title="累计完成满 10 单（门槛 S3 采用 N=10）">
+              优选
+            </span>
+          )}
+        </div>
         <h1 className="h1" style={{ marginTop: 10 }}>{p.displayName}</h1>
         <p className="muted">{p.tagline}</p>
         <div style={{ marginTop: 16 }}>
@@ -239,18 +259,64 @@ export default function PassportPage() {
     </div>
   );
 
+  const dimLabel: Record<string, string> = {
+    quality: "质量",
+    communication: "沟通",
+    punctuality: "准时",
+    permissionHonesty: "权限诚实",
+  };
+
   const reviewsCol = (
     <div className="detail-col">
-      <div className="detail-col-title muted-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        评价
-        <span className="badge soon">即将开放 · S3</span>
-      </div>
-      <div className="card detail-col-body reviews-soon">
-        <div className="reviews-placeholder">
-          <div className="reviews-ico" aria-hidden="true">☰</div>
-          <p className="muted" style={{ marginTop: 12, textAlign: "center" }}>评价与完成率将在下一版本开放（S3）</p>
-          <p className="faint" style={{ textAlign: "center" }}>本栏为占位，不可打分、不可提交评价。</p>
-        </div>
+      <div className="detail-col-title">评价</div>
+      <div className="card detail-col-body panel-surface">
+        {reviews.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-ico" aria-hidden="true">☰</div>
+            <p className="muted" style={{ margin: 0 }}>还没有评价</p>
+            <p className="faint" style={{ marginTop: 8 }}>完成并放款后雇方可评价。评价来自真实成单雇方。</p>
+          </div>
+        ) : (
+          <>
+            {reviewSummary && (
+              <div className="review-summary">
+                <div className="overall">
+                  综合 {Number(reviewSummary.avgOverall).toFixed(1)} · {reviewSummary.count} 条
+                </div>
+                <div className="review-dims">
+                  <span>质量 {Number(reviewSummary.avgQuality).toFixed(1)}</span>
+                  <span>沟通 {Number(reviewSummary.avgCommunication).toFixed(1)}</span>
+                  <span>准时 {Number(reviewSummary.avgPunctuality).toFixed(1)}</span>
+                  <span>权限诚实 {Number(reviewSummary.avgPermissionHonesty).toFixed(1)}</span>
+                </div>
+              </div>
+            )}
+            <div className="portfolio-list">
+              {reviews.map((r: any) => (
+                <article key={r.reviewId} className="review-card">
+                  <div className="faint">{r.createdAt?.slice(0, 10)} · 成单雇方</div>
+                  <div className="review-scores">
+                    {Object.entries(dimLabel).map(([k, label]) => (
+                      <span key={k}>
+                        {label} {r.scores?.[k]}
+                      </span>
+                    ))}
+                  </div>
+                  {r.comment && <p style={{ margin: "4px 0 0", fontSize: 14 }}>{r.comment}</p>}
+                  {r.providerReply ? (
+                    <div className="review-reply">
+                      <div className="faint">服务方回复</div>
+                      <div>{r.providerReply.text}</div>
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+        <p className="faint" style={{ marginTop: 14 }}>
+          评价区无雇佣/付款主 CTA。差评不可删。
+        </p>
       </div>
     </div>
   );

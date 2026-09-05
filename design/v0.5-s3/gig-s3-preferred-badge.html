@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 优选角标规范</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+    padding: 36px 44px 32px;
+  }
+  .desk-label {
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 36px; right: 44px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .sheet {
+    margin-top: 22px;
+    height: 810px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sheet-top {
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .sheet-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .sheet-note {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    background: #F7F5F1;
+  }
+
+  /* Spec column */
+  .spec {
+    padding: 18px 18px 16px;
+    border-right: 1px solid rgba(28,28,30,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #FFF;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 8px;
+  }
+  .badge-stage {
+    background: #F7F5F1;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 12px;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .badge-row .lbl {
+    font-size: 12px;
+    color: #6B6B70;
+    font-weight: 500;
+  }
+
+  /* Preferred badges — restrained slate, NOT gold flash */
+  .badge-pref {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 10px 0 8px;
+    border-radius: 6px;
+    background: rgba(61,90,115,0.08);
+    color: #3D5A73;
+    border: 1px solid rgba(61,90,115,0.28);
+    font-size: 11.5px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    width: fit-content;
+  }
+  .badge-pref svg {
+    width: 11px; height: 11px;
+    stroke: #3D5A73; fill: none;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .badge-pref.long { padding-right: 9px; }
+
+  .tooltip {
+    margin-top: 2px;
+    position: relative;
+    align-self: flex-start;
+  }
+  .tooltip .tip {
+    background: #1C1C1E;
+    color: #FFF;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 8px;
+    max-width: 240px;
+    box-shadow: 0 8px 20px rgba(28,28,30,0.18);
+  }
+  .tooltip .tip::after {
+    content: "";
+    position: absolute;
+    top: -5px; left: 18px;
+    width: 10px; height: 10px;
+    background: #1C1C1E;
+    transform: rotate(45deg);
+  }
+  .tooltip .tip {
+    position: relative;
+  }
+
+  .contrast {
+    background: #FFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .contrast-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .c-card {
+    border-radius: 10px;
+    border: 1px solid rgba(28,28,30,0.09);
+    padding: 12px 11px;
+    background: #F7F5F1;
+  }
+  .c-card .k {
+    font-size: 10.5px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 8px;
+  }
+  .c-card .d {
+    font-size: 11.5px;
+    color: #6B6B70;
+    line-height: 1.4;
+    margin-top: 8px;
+  }
+  .badge-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px 0 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 650;
+    background: rgba(61,122,95,0.12);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.28);
+    width: fit-content;
+  }
+  .badge-verified svg {
+    width: 12px; height: 12px;
+    fill: #3D7A5F;
+  }
+
+  .rules {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rule {
+    border-radius: 8px;
+    padding: 10px 11px;
+    border: 1px solid rgba(28,28,30,0.08);
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #6B6B70;
+  }
+  .rule strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .rule.do {
+    background: rgba(61,122,95,0.06);
+    border-color: rgba(61,122,95,0.18);
+  }
+  .rule.do strong { color: #3D7A5F; }
+  .rule.dont {
+    background: rgba(184,92,92,0.06);
+    border-color: rgba(184,92,92,0.18);
+  }
+  .rule.dont strong { color: #B85C5C; }
+
+  /* Applications */
+  .apps {
+    padding: 16px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .apps-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .apps-head h2 {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .apps-head span {
+    font-size: 12px;
+    color: #9A9A9E;
+    font-weight: 500;
+  }
+  .apps-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+  }
+  .app-card {
+    background: #FFF;
+    border: 1px solid rgba(28,28,30,0.09);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+  .app-card.wide {
+    grid-column: 1 / -1;
+  }
+  .app-label {
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+  }
+
+  /* Passport header mock */
+  .passport {
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    background: #FFFCFA;
+    position: relative;
+  }
+  .pass-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .pass-provider-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 3px;
+  }
+  .pass-provider {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+  }
+  .pass-name {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .pass-tagline {
+    font-size: 12px;
+    color: #6B6B70;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .pass-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pass-orders {
+    font-size: 12px;
+    color: #6B6B70;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Search card mock */
+  .search-card {
+    border: 1px solid rgba(28,28,30,0.09);
+    border-radius: 10px;
+    padding: 12px 12px 11px;
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    background: #FFF;
+  }
+  .avatar {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #E2E7EC, #D2DAE2);
+    display: grid;
+    place-items: center;
+    color: #3D5A73;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .sc-body { min-width: 0; }
+  .sc-title {
+    font-size: 13.5px;
+    font-weight: 650;
+    color: #1C1C1E;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .sc-sub {
+    font-size: 11.5px;
+    color: #9A9A9E;
+    font-weight: 500;
+  }
+  .sc-price {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .sc-price .v {
+    font-size: 14px;
+    font-weight: 650;
+    color: #1C1C1E;
+  }
+  .sc-price .u {
+    font-size: 10.5px;
+    color: #9A9A9E;
+    margin-top: 2px;
+  }
+
+  /* Board row mock */
+  .board-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 72px 72px;
+    gap: 10px;
+    align-items: center;
+    padding: 11px 12px;
+    border: 1px solid rgba(28,28,30,0.09);
+    border-radius: 10px;
+    background: #FFF;
+  }
+  .br-rank {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .br-name {
+    font-size: 13.5px;
+    font-weight: 650;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .br-sub {
+    font-size: 11px;
+    color: #9A9A9E;
+    margin-top: 2px;
+  }
+  .br-m {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .br-m .v { font-size: 13.5px; font-weight: 650; }
+  .br-m .l { font-size: 10px; color: #9A9A9E; }
+
+  .neg-note {
+    margin-top: auto;
+    font-size: 11.5px;
+    color: #9A9A9E;
+    line-height: 1.45;
+    padding-top: 4px;
+  }
+  .neg-note strong { color: #6B6B70; font-weight: 600; }
+
+  /* Under-10 contrast in apps */
+  .under {
+    opacity: 0.95;
+  }
+  .under .search-card,
+  .under .board-row {
+    background: #FFFCFA;
+  }
+  .chip-none {
+    font-size: 11px;
+    color: #9A9A9E;
+    font-weight: 500;
+    font-style: normal;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>D-S3-5</strong> · 优选角标规范 · N=10</div>
+    <div class="desk-meta">V0.5 Slice 3 · restrained · no gold flash · no bond UI</div>
+
+    <div class="sheet">
+      <div class="sheet-top">
+        <div class="sheet-title">
+          <span class="brand-mark">AG</span>
+          优选角标 · Spec
+        </div>
+        <div class="sheet-note">completedOrders ≥ 10 · 与「成单验证」区分</div>
+      </div>
+
+      <div class="body">
+        <div class="spec">
+          <div>
+            <div class="section-label">Badge variants</div>
+            <div class="badge-stage">
+              <div class="badge-row">
+                <span class="lbl">短标</span>
+                <span class="badge-pref">
+                  <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                  优选
+                </span>
+              </div>
+              <div class="badge-row">
+                <span class="lbl">满单说明</span>
+                <span class="badge-pref long">
+                  <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                  优选 · 满 10 单
+                </span>
+              </div>
+              <div class="tooltip">
+                <div class="tip">累计完成满 10 单（S3 采用 N=10）</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="contrast">
+            <div class="section-label">Contrast vs S2 成单验证</div>
+            <div class="contrast-grid">
+              <div class="c-card">
+                <div class="k">S3 · 优选</div>
+                <span class="badge-pref">
+                  <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                  优选
+                </span>
+                <div class="d">Listing/护照档位 · 星形线标 · 石板色 #3D5A73</div>
+              </div>
+              <div class="c-card">
+                <div class="k">S2 · 成单验证</div>
+                <span class="badge-verified">
+                  <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.2l4.2 1.6v3.1c0 2.4-1.7 3.9-4.2 4.9C3.5 9.8 1.8 8.3 1.8 5.9V2.8L6 1.2z"/><path d="M3.8 5.9l1.5 1.5 2.9-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  成单验证
+                </span>
+                <div class="d">作品来源标记 · 盾形实心 · 验证绿 #3D7A5F</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rules">
+            <div class="rule do">
+              <strong>Do</strong>
+              克制石板色 · 证件感 · ≥10 才显示 · Tooltip 写清 N=10
+            </div>
+            <div class="rule dont">
+              <strong>Don’t</strong>
+              金色闪烁促销标 · 不露担保金/bond · 不与成单验证混用同色同形
+            </div>
+          </div>
+        </div>
+
+        <div class="apps">
+          <div class="apps-head">
+            <h2>应用示意 · 三处</h2>
+            <span>护照头 · 检索卡 · 榜行 · 仅 ≥10</span>
+          </div>
+
+          <div class="apps-grid">
+            <div class="app-card">
+              <div class="app-label">Passport header · ≥10</div>
+              <div class="passport">
+                <div class="pass-top">
+                  <div>
+                    <div class="pass-provider-label">Provider · 结算主体</div>
+                    <div class="pass-provider">北湾工作室 · 工作室</div>
+                  </div>
+                  <span class="badge-pref">
+                    <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                    优选
+                  </span>
+                </div>
+                <div class="pass-name">LintForge · PR 守门</div>
+                <div class="pass-tagline">专注 TypeScript / Go 代码审查，按 PR 计费</div>
+                <div class="pass-meta">
+                  <span class="pass-orders">已完成 48 单</span>
+                  <span class="badge-pref long">
+                    <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                    优选 · 满 10 单
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="app-card">
+              <div class="app-label">Search card · ≥10</div>
+              <div class="search-card">
+                <div class="avatar">LF</div>
+                <div class="sc-body">
+                  <div class="sc-title">
+                    LintForge · PR 守门
+                    <span class="badge-pref">
+                      <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                      优选
+                    </span>
+                  </div>
+                  <div class="sc-sub">代码审查 · 48 单 · 北湾工作室</div>
+                </div>
+                <div class="sc-price">
+                  <div class="v">12</div>
+                  <div class="u">GigUSD / PR</div>
+                </div>
+              </div>
+              <div class="neg-note"><strong>检索卡</strong>角标贴在标题旁，不抢价格位。</div>
+            </div>
+
+            <div class="app-card">
+              <div class="app-label">Board row · ≥10（顶尖）</div>
+              <div class="board-row">
+                <span class="br-rank">1</span>
+                <div>
+                  <div class="br-name">
+                    LintForge · PR 守门
+                    <span class="badge-pref">
+                      <svg viewBox="0 0 12 12"><path d="M6 1.5l1.6 3.2 3.5.5-2.5 2.5.6 3.5L6 9.5 2.8 11.2l.6-3.5L.9 5.2l3.5-.5z"/></svg>
+                      优选
+                    </span>
+                  </div>
+                  <div class="br-sub">北湾工作室</div>
+                </div>
+                <div class="br-m"><div class="v">92.4</div><div class="l">综合分</div></div>
+                <div class="br-m"><div class="v">48</div><div class="l">完成单</div></div>
+              </div>
+            </div>
+
+            <div class="app-card under">
+              <div class="app-label">Under threshold · 3 单 · 无角标</div>
+              <div class="search-card">
+                <div class="avatar" style="background:linear-gradient(145deg,#E8E4DC,#D9D4CA);color:#6B6B70">CL</div>
+                <div class="sc-body">
+                  <div class="sc-title">
+                    CodeLens Mini
+                    <span class="chip-none">无优选</span>
+                  </div>
+                  <div class="sc-sub">代码审查 · 3 单 · 探索中</div>
+                </div>
+                <div class="sc-price">
+                  <div class="v">8</div>
+                  <div class="u">GigUSD / PR</div>
+                </div>
+              </div>
+              <div class="neg-note"><strong>规则</strong> completedOrders &lt; 10 不渲染优选；可弱文本显示「已完成 N 单」。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

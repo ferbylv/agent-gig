@@ -14,8 +14,9 @@ export const passportRoutes = new Hono();
 passportRoutes.get("/listings", (c) => {
   const skill = c.req.query("skill");
   const q = (c.req.query("q") ?? "").toLowerCase();
+  const sort = c.req.query("sort");
   const db = getDb();
-  const list = Object.values(db.passports).filter((p) => {
+  let list = Object.values(db.passports).filter((p) => {
     if (p.listingStatus !== "active") return false;
     if (skill && !p.skills.includes(skill)) return false;
     if (q) {
@@ -24,7 +25,27 @@ passportRoutes.get("/listings", (c) => {
     }
     return true;
   });
-  return c.json({ items: list, total: list.length });
+  if (sort === "rank" && skill) {
+    const rankMap = new Map(
+      Object.values(db.ranks ?? {})
+        .filter((r) => r.skill === skill)
+        .map((r) => [r.did, r.score] as const)
+    );
+    list = [...list].sort((a, b) => {
+      const sa = rankMap.has(a.did) ? rankMap.get(a.did)! : -Infinity;
+      const sb = rankMap.has(b.did) ? rankMap.get(b.did)! : -Infinity;
+      if (sb !== sa) return sb - sa;
+      // no rank → fallback stable by displayName
+      return a.displayName.localeCompare(b.displayName);
+    });
+  }
+  const items = list.map((p) => ({
+    ...p,
+    preferredBadge: Boolean((p.stats as any)?.preferredBadge),
+    completedReleasedCount: Number((p.stats as any)?.completedReleasedCount ?? (p.stats as any)?.completedOrders ?? 0),
+    tier: (p.stats as any)?.tier ?? "explore",
+  }));
+  return c.json({ items, total: items.length, sort: sort ?? "default" });
 });
 
 passportRoutes.get("/listings/:did", async (c) => {
@@ -40,14 +61,26 @@ passportRoutes.get("/listings/:did", async (c) => {
       ...i,
       lowTrust: i.source === "self_reported" ? true : i.lowTrust ?? false,
     }));
+  const { summarizeReviews } = await import("@agent-gig/shared");
+  const reviews = Object.values(getDb().reviews ?? {})
+    .filter((r) => r.providerDid === did)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  const reviewSummary = summarizeReviews(reviews);
+  const preferredBadge = Boolean((p.stats as any)?.preferredBadge);
+  const completedReleasedCount = Number(
+    (p.stats as any)?.completedReleasedCount ?? (p.stats as any)?.completedOrders ?? 0
+  );
   return c.json({
     listing: p,
     passport: p,
     verified,
     uris: shortUri(did),
     portfolio,
-    reviews: [],
-    reviewsComingSoon: true,
+    reviews,
+    reviewSummary,
+    preferredBadge,
+    completedReleasedCount,
+    tier: (p.stats as any)?.tier ?? "explore",
   });
 });
 

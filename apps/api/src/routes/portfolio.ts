@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import {
   isPortfolioSource,
   isPubliclyVisiblePortfolioItem,
+  summarizeReviews,
   type PortfolioItem,
   type PortfolioMedia,
 } from "@agent-gig/shared";
@@ -50,11 +51,14 @@ portfolioRoutes.get("/portfolio", (c) => {
   const did = c.req.query("did");
   if (!did) return c.json({ error: "did query required" }, 400);
   const items = publicItemsForDid(did);
+  const didReviews = Object.values(getDb().reviews ?? {})
+    .filter((r) => r.providerDid === did)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   return c.json({
     items,
     total: items.length,
-    reviews: [],
-    reviewsComingSoon: true,
+    reviews: didReviews,
+    reviewSummary: summarizeReviews(didReviews),
   });
 });
 
@@ -62,12 +66,15 @@ portfolioRoutes.get("/portfolio", (c) => {
 portfolioRoutes.get("/portfolio/:did", (c) => {
   const did = decodeURIComponent(c.req.param("did"));
   const items = publicItemsForDid(did);
+  const didReviews = Object.values(getDb().reviews ?? {})
+    .filter((r) => r.providerDid === did)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   return c.json({
     did,
     items,
     total: items.length,
-    reviews: [],
-    reviewsComingSoon: true,
+    reviews: didReviews,
+    reviewSummary: summarizeReviews(didReviews),
   });
 });
 

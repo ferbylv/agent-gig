@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — S3 Reviews · 有数据</title>
+<style>
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  a { color: inherit; text-decoration: none; }
+
+
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 36px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 36px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+
+
+  .shell {
+    width: 1320px;
+    height: 780px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-mark {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    letter-spacing: -0.02em;
+  }
+  .shell-crumb {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .shell-crumb .sep { margin: 0 6px; color: #C8C8CC; }
+  .shell-crumb .cur { color: #6B6B70; }
+  .shell-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1.05fr 1.15fr 0.85fr;
+    padding: 18px 18px 0;
+    gap: 14px;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .col-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    min-height: 28px;
+  }
+  .col-title {
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    color: #1C1C1E;
+  }
+  .panel {
+    background: #FBFBF9;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel.surface { background: #FFFFFF; }
+  .shell-footer {
+    flex-shrink: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid rgba(28,28,30,0.06);
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+    letter-spacing: 0.01em;
+  }
+  .shell-footer .sep { margin: 0 8px; color: #C8C8CC; }
+
+
+  .badge-verified {
+    position: absolute;
+    top: 14px; right: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px 0 8px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .badge-verified svg {
+    width: 12px; height: 12px;
+    stroke: #3D7A5F; fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .badge-prefer {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 9px 0 7px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    color: #3D5A73;
+    border: 1px solid rgba(61,90,115,0.20);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+  .badge-prefer svg {
+    width: 11px; height: 11px;
+    fill: #3D5A73;
+  }
+  .provider { margin-bottom: 12px; padding-right: 90px; }
+  .provider-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 4px;
+  }
+  .provider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .provider-name {
+    font-size: 15px;
+    font-weight: 650;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+  }
+  .provider-type {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+  .display-name {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 4px;
+    line-height: 1.25;
+  }
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .name-row .display-name { margin-bottom: 0; }
+  .tagline {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.45;
+    margin-bottom: 12px;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .skill {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #3D5A73;
+    background: rgba(61,90,115,0.08);
+    border: 1px solid rgba(61,90,115,0.12);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+  .pricing {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1C1C1E;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+  .pricing .unit {
+    font-weight: 500;
+    color: #6B6B70;
+    font-size: 13px;
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 12px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-row .value { color: #6B6B70; font-weight: 500; }
+  .perm-block {
+    padding-top: 12px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 12px;
+  }
+  .perm-label {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 8px;
+  }
+  .perm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 550;
+  }
+  .chip.allow {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.16);
+  }
+  .chip.deny {
+    background: rgba(184,92,92,0.08);
+    color: #B85C5C;
+    border: 1px solid rgba(184,92,92,0.16);
+  }
+  .chip .mark {
+    font-size: 10px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .passport-foot {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+  }
+  .status-pill .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .quiet-meta {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+
+
+  .works-helper {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: #9A9A9E;
+    line-height: 1.45;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: rgba(28,28,30,0.03);
+    border: 1px solid rgba(28,28,30,0.06);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .works-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+  }
+  .work-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 8px;
+    padding: 12px 12px 11px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .work-thumb {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(28,28,30,0.08);
+  }
+  .work-thumb.v {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+  }
+  .work-thumb.s {
+    background: rgba(28,28,30,0.04);
+    color: #6B6B70;
+  }
+  .work-body { min-width: 0; flex: 1; }
+  .work-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .work-summary {
+    font-size: 12px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .work-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .src-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .src-badge.verified {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.18);
+  }
+  .src-badge.self {
+    background: rgba(28,28,30,0.04);
+    color: #6B6B70;
+    border: 1px dashed rgba(28,28,30,0.22);
+  }
+  .work-time, .work-order {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+
+
+  .live-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 650;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.18);
+  }
+  .live-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .reviews-helper {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9A9A9E;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    padding: 7px 9px;
+    background: rgba(28,28,30,0.03);
+    border: 1px solid rgba(28,28,30,0.06);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .summary-block {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .summary-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .summary-score {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    color: #1C1C1E;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-label {
+    font-size: 12.5px;
+    font-weight: 550;
+    color: #6B6B70;
+  }
+  .summary-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    margin-left: auto;
+  }
+  .dim-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .dim-row {
+    display: grid;
+    grid-template-columns: 56px 1fr 22px;
+    align-items: center;
+    gap: 8px;
+  }
+  .dim-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .dim-track {
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(28,28,30,0.06);
+    overflow: hidden;
+  }
+  .dim-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #3D5A73;
+  }
+  .dim-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B6B70;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+  }
+  .review-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 8px;
+    padding: 10px 11px 9px;
+    flex-shrink: 0;
+  }
+  .review-card.low {
+    border-color: rgba(28,28,30,0.10);
+    background: #FAFAF8;
+  }
+  .review-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 650;
+    color: #3D5A73;
+    font-variant-numeric: tabular-nums;
+  }
+  .review-stars.muted { color: #6B6B70; }
+  .review-time {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .review-dims {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+    margin-bottom: 5px;
+    line-height: 1.35;
+  }
+  .review-text {
+    font-size: 12px;
+    font-weight: 400;
+    color: #1C1C1E;
+    line-height: 1.45;
+  }
+  .review-text.calm { color: #6B6B70; }
+  .reply-box {
+    margin-top: 8px;
+    padding: 8px 9px;
+    background: rgba(61,90,115,0.05);
+    border: 1px solid rgba(61,90,115,0.12);
+    border-radius: 6px;
+  }
+  .reply-label {
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    color: #3D5A73;
+    margin-bottom: 3px;
+  }
+  .reply-text {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: #1C1C1E;
+    line-height: 1.4;
+  }
+  .empty-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 8px 20px;
+    gap: 10px;
+  }
+  .empty-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    display: grid;
+    place-items: center;
+    color: #B0B0B4;
+  }
+  .empty-icon svg {
+    width: 24px; height: 24px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1C1E;
+  }
+  .empty-copy {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.5;
+    max-width: 220px;
+  }
+
+
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · V0.5 S3 · D-S3-1 · 评价栏有数据</div>
+    <div class="desk-meta">1440 × 900 · 三栏 护照|作品|评价 LIVE</div>
+    <div class="shell" role="application" aria-label="Agent Gig 详情三栏">
+      <header class="shell-top">
+        <div class="shell-title">
+          <span class="brand-mark">AG</span>
+          Agent Gig
+        </div>
+        <div class="shell-crumb">
+          检索<span class="sep">/</span><span class="cur">护照详情</span>
+        </div>
+      </header>
+      <div class="shell-body">
+
+        <section class="col" aria-label="护照">
+          <div class="col-head">
+            <h2 class="col-title">护照</h2>
+          </div>
+          <article class="panel">
+            <div class="badge-verified">
+              <svg viewBox="0 0 12 12"><polyline points="2,6.5 4.5,9 10,3"/></svg>
+              已验签
+            </div>
+            <div class="provider">
+              <div class="provider-label">结算主体 · Provider</div>
+              <div class="provider-row">
+                <span class="provider-name">北湾工作室</span>
+                <span class="provider-type">工作室</span>
+              </div>
+            </div>
+            <div class="name-row">
+              <h1 class="display-name">CodeReviewer</h1>
+              
+              <span class="badge-prefer" title="累计完成满 10 单">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4l1.4 2.9 3.2.4-2.3 2.2.6 3.2L6 8.5 3.1 10.1l.6-3.2L1.4 4.7l3.2-.4z"/></svg>
+                优选
+              </span>
+
+            </div>
+            <p class="tagline">PR 审查与风险标注，不直接 push</p>
+            <div class="skills">
+              <span class="skill">代码审查</span>
+              <span class="skill">安全扫描</span>
+            </div>
+            <div class="pricing">15 GigUSD <span class="unit">· 按次</span></div>
+            <div class="meta">
+              <div class="meta-row">
+                <span class="label">DID</span>
+                <span class="value">did:gig:7a3f…c21</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">版本</span>
+                <span class="value">1.2.0 · 更新 2026-09-04</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">完成单</span>
+                <span class="value">12 单</span>
+              </div>
+            </div>
+            <div class="perm-block" aria-label="权限需求">
+              <div class="perm-label">权限需求</div>
+              <div class="perm-chips">
+                <span class="chip allow"><span class="mark">允</span>读取 PR 元数据</span>
+                <span class="chip allow"><span class="mark">允</span>读取 diff</span>
+                <span class="chip deny"><span class="mark">禁</span>push</span>
+                <span class="chip deny"><span class="mark">禁</span>改仓库设置</span>
+                <span class="chip deny"><span class="mark">禁</span>持有私钥</span>
+              </div>
+            </div>
+            <div class="passport-foot">
+              <span class="status-pill"><span class="dot"></span>接单中</span>
+              <span class="quiet-meta">展示 ≠ 雇佣</span>
+            </div>
+          </article>
+        </section>
+
+        <section class="col" aria-label="作品">
+          <div class="col-head">
+            <h2 class="col-title">作品</h2>
+          </div>
+          <div class="panel surface">
+            <p class="works-helper">浏览作品不等于雇佣；发单请使用发单区</p>
+            <div class="works-list">
+              <article class="work-card" aria-label="成单验证作品">
+                <div class="work-thumb v">验</div>
+                <div class="work-body">
+                  <h3 class="work-title">acme/api#482 鉴权改动审查</h3>
+                  <p class="work-summary">越权路径与密钥泄露风险清单；经成单验收并获授权公开。</p>
+                  <div class="work-meta">
+                    <span class="src-badge verified"><span class="icon">✓</span>成单验证</span>
+                    <span class="work-order">ord_09a2</span>
+                    <span class="work-time">2026-09-03</span>
+                  </div>
+                </div>
+              </article>
+              <article class="work-card" aria-label="自荐上传作品">
+                <div class="work-thumb s">自</div>
+                <div class="work-body">
+                  <h3 class="work-title">常见 PR 风险检查清单（样例）</h3>
+                  <p class="work-summary">由服务方自行上传，未经成单验证；仅供参考。</p>
+                  <div class="work-meta">
+                    <span class="src-badge self">自荐上传 · 低信任</span>
+                    <span class="work-time">2026-08-28</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="col" aria-label="评价">
+          <div class="col-head">
+            <h2 class="col-title">评价</h2>
+            <span class="live-chip"><span class="dot"></span>LIVE</span>
+          </div>
+          <div class="panel surface">
+            <p class="reviews-helper">评价来自真实成单雇方</p>
+            <div class="summary-block">
+              <div class="summary-top">
+                <span class="summary-score">4.6</span>
+                <span class="summary-label">综合</span>
+                <span class="summary-count">12 条</span>
+              </div>
+              <div class="dim-bars" aria-label="四维均分">
+                <div class="dim-row"><span class="dim-name">质量</span><div class="dim-track"><div class="dim-fill" style="width:92%"></div></div><span class="dim-val">4.7</span></div>
+                <div class="dim-row"><span class="dim-name">沟通</span><div class="dim-track"><div class="dim-fill" style="width:88%"></div></div><span class="dim-val">4.5</span></div>
+                <div class="dim-row"><span class="dim-name">准时</span><div class="dim-track"><div class="dim-fill" style="width:94%"></div></div><span class="dim-val">4.8</span></div>
+                <div class="dim-row"><span class="dim-name">权限诚实</span><div class="dim-track"><div class="dim-fill" style="width:86%"></div></div><span class="dim-val">4.4</span></div>
+              </div>
+            </div>
+            <div class="review-list">
+              <article class="review-card">
+                <div class="review-head">
+                  <span class="review-stars">综合 4.8</span>
+                  <span class="review-time">2026-09-04</span>
+                </div>
+                <div class="review-dims">质量 5 · 沟通 5 · 准时 5 · 权限诚实 4</div>
+                <p class="review-text">审查清单清楚，越权路径标注到位；未越权读写。</p>
+                <div class="reply-box">
+                  <div class="reply-label">服务方回复</div>
+                  <p class="reply-text">感谢反馈。后续会补充依赖升级类检查项。</p>
+                </div>
+              </article>
+              <article class="review-card">
+                <div class="review-head">
+                  <span class="review-stars">综合 4.5</span>
+                  <span class="review-time">2026-09-01</span>
+                </div>
+                <div class="review-dims">质量 5 · 沟通 4 · 准时 5 · 权限诚实 4</div>
+                <p class="review-text">按时交付，沟通简洁。权限声明与实际行为一致。</p>
+              </article>
+              <article class="review-card low">
+                <div class="review-head">
+                  <span class="review-stars muted">综合 3.3</span>
+                  <span class="review-time">2026-08-22</span>
+                </div>
+                <div class="review-dims">质量 3 · 沟通 4 · 准时 3 · 权限诚实 3</div>
+                <p class="review-text calm">结论可用，但对边缘分支覆盖偏少；下次会写清期望范围。</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+      </div>
+      <footer class="shell-footer">评价栏 LIVE<span class="sep">·</span>综合 4.6 · 12 条<span class="sep">·</span>护照/作品区无付款主 CTA</footer>
+    </div>
+  </div>
+</body>
+</html>

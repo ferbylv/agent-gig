@@ -10,7 +10,12 @@ import type {
   PassportCard,
   Wallet,
   PortfolioItem,
+  Review,
+  RankScore,
+  BlacklistEntry,
+  RankWeights,
 } from "@agent-gig/shared";
+import { RANK_WEIGHTS_DEFAULT } from "@agent-gig/shared";
 
 export interface Db {
   passports: Record<string, PassportCard>;
@@ -24,6 +29,12 @@ export interface Db {
   audit: AuditEvent[];
   connects: Record<string, ConnectBinding>; // hirerAgentId
   portfolio: Record<string, PortfolioItem>;
+  /** reviewId -> Review; also indexed by orderId uniqueness in API */
+  reviews: Record<string, Review>;
+  /** `${did}::${skill}` -> RankScore */
+  ranks: Record<string, RankScore>;
+  blacklist: BlacklistEntry[];
+  rankWeights: RankWeights;
   adminKey: string;
   meta: { seededAt?: string };
 }
@@ -42,12 +53,25 @@ function emptyDb(): Db {
     audit: [],
     connects: {},
     portfolio: {},
+    reviews: {},
+    ranks: {},
+    blacklist: [],
+    rankWeights: { ...RANK_WEIGHTS_DEFAULT },
     adminKey: process.env.AG_ADMIN_KEY ?? "dev-admin-key-v0",
     meta: {},
   };
 }
 
 let db: Db = emptyDb();
+
+function migrate(raw: Db): Db {
+  if (!raw.portfolio) raw.portfolio = {};
+  if (!raw.reviews) raw.reviews = {};
+  if (!raw.ranks) raw.ranks = {};
+  if (!raw.blacklist) raw.blacklist = [];
+  if (!raw.rankWeights) raw.rankWeights = { ...RANK_WEIGHTS_DEFAULT };
+  return raw;
+}
 
 export function getDb(): Db {
   return db;
@@ -56,8 +80,7 @@ export function getDb(): Db {
 export function loadDb(): Db {
   try {
     if (existsSync(DATA_PATH)) {
-      db = JSON.parse(readFileSync(DATA_PATH, "utf8")) as Db;
-      if (!db.portfolio) db.portfolio = {};
+      db = migrate(JSON.parse(readFileSync(DATA_PATH, "utf8")) as Db);
     } else {
       db = emptyDb();
     }
@@ -91,4 +114,8 @@ export function todayUtc(): string {
 
 export function uid(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+}
+
+export function rankKey(did: string, skill: string): string {
+  return `${did}::${skill}`;
 }

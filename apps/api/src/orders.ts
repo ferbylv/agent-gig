@@ -18,6 +18,7 @@ import {
   rejectBudget,
 } from "./budget.js";
 import { lockEscrow, refundEscrow, releaseEscrow } from "./escrow.js";
+import { assertNotBlacklisted, assertNotSelfHire } from "./blacklist.js";
 
 export class HttpError extends Error {
   status: number;
@@ -77,6 +78,14 @@ export function createOrder(input: {
   if (passport.listingStatus !== "active") {
     throw new HttpError(400, `Listing is ${passport.listingStatus}, cannot order`, "LISTING_INACTIVE");
   }
+
+  // S3: blacklist + minimal same-owner self-hire — reject before any escrow lock
+  assertNotBlacklisted({
+    did: input.providerAgentId,
+    providerId: passport.provider.providerId,
+    userId: passport.owner?.userId,
+  });
+  assertNotSelfHire(input.hirerUserId, passport.owner?.userId);
 
   if (!input.taskSummary || !String(input.taskSummary).trim()) {
     throw new HttpError(400, "taskSummary is required", "INVALID_TASK");
@@ -255,6 +264,15 @@ export function confirmOrder(orderId: string, decision: "approve" | "reject", ac
     rejectBudget(order.parties.hirerAgentId, order.pricing.feeCap, check.reason, orderId);
     throw new HttpError(400, check.reason, `BUDGET_${check.code}`);
   }
+
+  // S3: blacklist gate BEFORE escrow lock (V0.5-8)
+  const passport = db.passports[order.parties.providerAgentId];
+  assertNotBlacklisted({
+    did: order.parties.providerAgentId,
+    providerId: order.parties.providerId,
+    userId: passport?.owner?.userId,
+  });
+  assertNotSelfHire(order.parties.hirerUserId, passport?.owner?.userId);
 
   if (!order.confirmPayload) syncConfirmPayload(order);
   order.confirmStatus = "approved";
