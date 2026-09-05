@@ -14,11 +14,18 @@ export default function OrderPage() {
   const [homepage, setHomepage] = useState(false);
   const [consentBusy, setConsentBusy] = useState(false);
   const [portfolioItemId, setPortfolioItemId] = useState<string | null>(null);
+  const [revokeOpen, setRevokeOpen] = useState(false);
+  const [revokeBusy, setRevokeBusy] = useState(false);
 
   async function reload() {
     const d = await api(`/v0/orders/${id}`);
     setOrder(d.order);
     setEscrow(d.escrow);
+    if (d.order?.portfolioItemId && !d.order.portfolioConsent?.revokedAt) {
+      setPortfolioItemId(d.order.portfolioItemId);
+    } else if (d.order?.portfolioConsent?.revokedAt) {
+      setPortfolioItemId(null);
+    }
   }
 
   useEffect(() => {
@@ -79,6 +86,7 @@ export default function OrderPage() {
 
   async function revokePortfolio() {
     if (!portfolioItemId) return;
+    setRevokeBusy(true);
     setMsg(null);
     try {
       await api(`/v0/portfolio/${portfolioItemId}/revoke`, {
@@ -88,8 +96,12 @@ export default function OrderPage() {
       });
       setMsg("已撤回公开展示；新访客将看不到该作品");
       setPortfolioItemId(null);
+      setRevokeOpen(false);
+      await reload();
     } catch (e: any) {
       setMsg(e.message);
+    } finally {
+      setRevokeBusy(false);
     }
   }
 
@@ -151,7 +163,7 @@ export default function OrderPage() {
           </div>
           {portfolioItemId && !order.portfolioConsent.revokedAt && (
             <p className="banner-sub">
-              <button type="button" className="btn" style={{ marginTop: 8 }} onClick={revokePortfolio}>
+              <button type="button" className="btn" style={{ marginTop: 8 }} onClick={() => setRevokeOpen(true)}>
                 撤回公开展示
               </button>
             </p>
@@ -255,6 +267,33 @@ export default function OrderPage() {
             reload();
           }}
         />
+      )}
+
+      {revokeOpen && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="revoke-title">
+          <div className="modal">
+            <header>
+              <h2 className="h2" id="revoke-title" style={{ margin: 0 }}>
+                撤回公开展示
+              </h2>
+              <button type="button" aria-label="关闭" onClick={() => setRevokeOpen(false)}>
+                ×
+              </button>
+            </header>
+            <p className="muted">撤回后新访客将看不到该作品；默认不公开</p>
+            <p className="faint" style={{ marginTop: 10 }}>
+              已缓存页面约 24h 内可能仍可见（待确认）。作品本身与订单记录不受影响。
+            </p>
+            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <button className="btn" type="button" disabled={revokeBusy} onClick={() => setRevokeOpen(false)}>
+                取消
+              </button>
+              <button className="btn danger" type="button" disabled={revokeBusy} onClick={revokePortfolio}>
+                {revokeBusy ? "撤回中…" : "确认撤回"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {consentOpen && (
