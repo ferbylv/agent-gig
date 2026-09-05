@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — D-S2-2 授权勾选卡 · 默认</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+    z-index: 3;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+    z-index: 3;
+  }
+  /* Dimmed accept chrome behind (post-满意) */
+  .host-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.42;
+    filter: saturate(0.85);
+    pointer-events: none;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.12);
+    color: #3D7A5F;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .order-meta {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .body-fill {
+    flex: 1;
+    padding: 20px 24px;
+    background: #F7F5F1;
+  }
+  .ghost-card {
+    height: 100%;
+    background: #FFF;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.06);
+    padding: 18px 20px;
+  }
+  .ghost-line {
+    height: 10px;
+    border-radius: 4px;
+    background: rgba(28,28,30,0.06);
+    margin-bottom: 12px;
+  }
+  .ghost-line.w60 { width: 60%; }
+  .ghost-line.w40 { width: 40%; }
+  .ghost-line.w80 { width: 80%; }
+  .action-ghost {
+    height: 72px;
+    border-top: 1px solid rgba(28,28,30,0.07);
+    background: #FFF;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 24px;
+    gap: 12px;
+  }
+  .ghost-btn {
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(28,28,30,0.06);
+    width: 88px;
+  }
+  .ghost-btn.pri {
+    width: 108px;
+    background: rgba(61,90,115,0.25);
+  }
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(28,28,30,0.32);
+    z-index: 1;
+  }
+  .modal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 480px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.12),
+      0 32px 64px rgba(28,28,30,0.10);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 22px 24px 0 28px;
+  }
+  .modal-icon {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: rgba(61,90,115,0.10);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .modal-icon svg {
+    width: 18px; height: 18px;
+    stroke: #3D5A73;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .btn-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: #9A9A9E;
+    display: grid;
+    place-items: center;
+    margin-top: -2px;
+    margin-right: -4px;
+  }
+  .btn-close svg {
+    width: 16px; height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .modal-body {
+    padding: 14px 28px 8px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+  .modal-helper {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+  .consent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .consent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #F7F5F1;
+    border: 1px solid rgba(28,28,30,0.07);
+    border-radius: 10px;
+  }
+  .check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid rgba(28,28,30,0.28);
+    background: #FFFFFF;
+    flex-shrink: 0;
+    margin-top: 1px;
+    position: relative;
+  }
+  /* MUST remain unchecked by default — no ::after checkmark */
+  .consent-label {
+    font-size: 14px;
+    font-weight: 550;
+    color: #1C1C1E;
+    line-height: 1.4;
+  }
+  .consent-sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: #9A9A9E;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .sensitive-note {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B6B70;
+    line-height: 1.45;
+    padding: 10px 12px;
+    background: rgba(28,28,30,0.03);
+    border-radius: 8px;
+    border-left: 3px solid rgba(61,90,115,0.35);
+  }
+  .sensitive-note .tag {
+    color: #3D5A73;
+    font-weight: 650;
+    margin-right: 4px;
+  }
+  .modal-footer {
+    padding: 18px 28px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .btn {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #6B6B70;
+    border-color: rgba(28,28,30,0.14);
+    min-width: 96px;
+  }
+  .btn-primary {
+    background: #3D5A73;
+    color: #FFFFFF;
+    min-width: 108px;
+  }
+  /* Disabled until at least one checkbox — skip path is secondary */
+  .btn-primary[disabled],
+  .btn-primary.is-disabled {
+    background: rgba(61,90,115,0.35);
+    color: rgba(255,255,255,0.85);
+    opacity: 0.72;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · 验收 · 公开授权（可选）</div>
+    <div class="desk-meta">D-S2-2 · 默认未勾选</div>
+    <div class="host-bg" aria-hidden="true">
+      <div class="shell">
+        <div class="shell-top">
+          <div class="shell-title">
+            <div class="brand-mark">AG</div>
+            订单验收
+            <span class="status-chip">已验收 · 已放款</span>
+          </div>
+          <div class="order-meta">北湾工作室 · Agent CodeReviewer · 15 GigUSD</div>
+        </div>
+        <div class="body-fill">
+          <div class="ghost-card">
+            <div class="ghost-line w60"></div>
+            <div class="ghost-line w80"></div>
+            <div class="ghost-line w40"></div>
+            <div class="ghost-line w80"></div>
+          </div>
+        </div>
+        <div class="action-ghost">
+          <div class="ghost-btn"></div>
+          <div class="ghost-btn pri"></div>
+        </div>
+      </div>
+    </div>
+    <div class="scrim"></div>
+    <div class="modal" role="dialog" aria-labelledby="consent-title" aria-modal="true">
+      <div class="modal-head">
+        <div class="modal-icon" aria-hidden="true">
+          <!-- shield / authorization mark — labor tone -->
+          <svg viewBox="0 0 18 18">
+            <path d="M9 2.5 L14.5 5 v4.2c0 3.2-2.3 5.5-5.5 6.8C5.8 14.7 3.5 12.4 3.5 9.2V5Z"/>
+            <polyline points="6.2,9 8.2,11 12,6.8"/>
+          </svg>
+        </div>
+        <button type="button" class="btn-close" aria-label="关闭（跳过，不写入公开授权）" title="关闭 / 跳过">
+          <svg viewBox="0 0 16 16"><line x1="3.5" y1="3.5" x2="12.5" y2="12.5"/><line x1="12.5" y1="3.5" x2="3.5" y2="12.5"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h1 class="modal-title" id="consent-title">是否公开展示本单交付？（可选）</h1>
+        <p class="modal-helper">默认不公开；未授权的交付不会出现在作品集</p>
+        <div class="consent-list">
+          <label class="consent-item">
+            <span class="check" role="checkbox" aria-checked="false" data-flag="publicPortfolio"></span>
+            <span>
+              <span class="consent-label">写入接单方公开作品集</span>
+              <div class="consent-sub">仅展示摘要与来源标记，不默认曝光全文</div>
+            </span>
+          </label>
+          <label class="consent-item">
+            <span class="check" role="checkbox" aria-checked="false" data-flag="homepage"></span>
+            <span>
+              <span class="consent-label">允许平台首页/推荐位展示</span>
+              <div class="consent-sub">可单独关闭；撤回后新流量不可见</div>
+            </span>
+          </label>
+        </div>
+        <p class="sensitive-note"><span class="tag">敏感</span>含仓库路径/密钥片段请先脱敏</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary">暂不公开</button>
+        <button type="button" class="btn btn-primary is-disabled" disabled aria-disabled="true" title="勾选至少一项后可保存授权；未勾选请用「暂不公开」">保存授权</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

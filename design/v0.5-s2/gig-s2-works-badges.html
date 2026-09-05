@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 作品卡片 · 来源标记</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+    padding: 40px 48px 36px;
+  }
+  .desk-label {
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .sheet {
+    margin-top: 28px;
+    height: 796px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sheet-top {
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .sheet-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .sheet-note {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .sheet-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    background: #F7F5F1;
+  }
+
+  /* —— Spec strip: three card styles —— */
+  .spec {
+    padding: 22px 24px 20px;
+    border-right: 1px solid rgba(28,28,30,0.06);
+    overflow: hidden;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 14px;
+  }
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  /* Work card */
+  .work-card {
+    background: #FFF;
+    border-radius: 12px;
+    border: 1px solid rgba(28,28,30,0.10);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .work-card.is-self {
+    border-color: rgba(166,124,82,0.38);
+    border-style: dashed;
+    background: #FFFCFA;
+  }
+  .work-card.is-curated {
+    border-color: rgba(61,90,115,0.42);
+    box-shadow: inset 0 0 0 1px rgba(61,90,115,0.08);
+  }
+  .thumb {
+    height: 118px;
+    background: linear-gradient(145deg, #E8E4DC 0%, #D9D4CA 100%);
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: #9A9A9E;
+  }
+  .work-card.is-self .thumb {
+    background: linear-gradient(145deg, #F3EBE1 0%, #E8DDD0 100%);
+    opacity: 0.92;
+  }
+  .work-card.is-curated .thumb {
+    background: linear-gradient(145deg, #E2E7EC 0%, #D2DAE2 100%);
+  }
+  .thumb-ico {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(28,28,30,0.12);
+    background: rgba(255,255,255,0.55);
+    display: grid;
+    place-items: center;
+  }
+  .thumb-ico svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .card-body {
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    line-height: 1.35;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-date {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-view {
+    font-size: 12.5px;
+    font-weight: 560;
+    color: #3D5A73;
+    background: transparent;
+    border: none;
+    padding: 0;
+    letter-spacing: 0.01em;
+  }
+  .card-view::after { content: " →"; opacity: 0.55; }
+
+  /* Badges — text + distinct icon shape (colorblind-safe) */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px 0 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .badge svg {
+    width: 12px; height: 12px;
+    flex-shrink: 0;
+  }
+  .badge-verified {
+    background: rgba(61,122,95,0.12);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.28);
+  }
+  .badge-verified svg { fill: #3D7A5F; stroke: none; }
+  .badge-self {
+    background: rgba(166,124,82,0.12);
+    color: #A67C52;
+    border: 1px dashed rgba(166,124,82,0.45);
+  }
+  .badge-self svg { fill: none; stroke: #A67C52; stroke-width: 1.7; stroke-linejoin: round; }
+  .badge-curated {
+    background: #FFF;
+    color: #3D5A73;
+    border: 1.5px solid #3D5A73;
+  }
+  .badge-curated svg { fill: none; stroke: #3D5A73; stroke-width: 1.7; stroke-linejoin: round; }
+
+  .helper {
+    font-size: 11.5px;
+    font-weight: 450;
+    color: #6B6B70;
+    line-height: 1.45;
+  }
+  .work-card.is-self .helper { color: #8A6A48; }
+
+  .legend {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: #FFF;
+    border-radius: 10px;
+    border: 1px solid rgba(28,28,30,0.08);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .legend-item { display: flex; flex-direction: column; gap: 8px; }
+  .legend-key {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9A9A9E;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .legend-desc {
+    font-size: 12px;
+    color: #6B6B70;
+    line-height: 1.45;
+  }
+
+  /* —— Works column list —— */
+  .col {
+    display: flex;
+    flex-direction: column;
+    background: #FFF;
+    min-height: 0;
+  }
+  .col-head {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid rgba(28,28,30,0.06);
+  }
+  .col-head h2 {
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .col-head p {
+    font-size: 12px;
+    color: #9A9A9E;
+    font-weight: 500;
+  }
+  .col-list {
+    flex: 1;
+    padding: 12px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .list-card {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(28,28,30,0.09);
+    background: #FFF;
+  }
+  .list-card.is-self {
+    border-style: dashed;
+    border-color: rgba(166,124,82,0.38);
+    background: #FFFCFA;
+  }
+  .list-card.is-curated {
+    border-color: rgba(61,90,115,0.38);
+  }
+  .list-thumb {
+    width: 64px; height: 64px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #E8E4DC, #D9D4CA);
+    display: grid;
+    place-items: center;
+    color: #9A9A9E;
+  }
+  .list-card.is-self .list-thumb {
+    background: linear-gradient(145deg, #F3EBE1, #E8DDD0);
+  }
+  .list-card.is-curated .list-thumb {
+    background: linear-gradient(145deg, #E2E7EC, #D2DAE2);
+  }
+  .list-thumb svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none; stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    justify-content: center;
+  }
+  .list-title {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .list-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .list-date {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+  .list-view {
+    font-size: 12px;
+    font-weight: 560;
+    color: #3D5A73;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .badge.sm {
+    height: 22px;
+    font-size: 11px;
+    padding: 0 8px 0 6px;
+  }
+  .badge.sm svg { width: 11px; height: 11px; }
+  .col-foot {
+    padding: 10px 20px 16px;
+    font-size: 11.5px;
+    color: #9A9A9E;
+    line-height: 1.45;
+    border-top: 1px solid rgba(28,28,30,0.06);
+  }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="desk-label"><strong>Agent Gig</strong> · 作品集 · 来源标记卡片</div>
+  <div class="desk-meta">D-S2-3 · verified / self_reported / curated</div>
+
+  <div class="sheet">
+    <div class="sheet-top">
+      <div class="sheet-title">
+        <span class="brand-mark">AG</span>
+        作品卡片 · 来源 badge 规范
+      </div>
+      <div class="sheet-note">色盲友好：文案 + 图标形状 · 无雇佣付款 CTA</div>
+    </div>
+
+    <div class="sheet-body">
+      <section class="spec" aria-label="三种来源卡片">
+        <div class="section-label">Card styles · side by side</div>
+        <div class="cards-row">
+
+          <!-- verified_order -->
+          <article class="work-card" aria-label="成单验证作品">
+            <div class="thumb" aria-hidden="true">
+              <div class="thumb-ico">
+                <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+              </div>
+            </div>
+            <div class="card-body">
+              <span class="badge badge-verified" title="verified_order">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.2l4.2 1.6v3.1c0 2.4-1.7 3.9-4.2 4.9C3.5 9.8 1.8 8.3 1.8 5.9V2.8L6 1.2z"/><path d="M3.8 5.9l1.5 1.5 2.9-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                成单验证
+              </span>
+              <h3 class="card-title">代码审查交付摘要 · PR #482</h3>
+              <p class="helper">经平台成单验收并获授权</p>
+              <div class="card-meta">
+                <span class="card-date">2026-08-21</span>
+                <button type="button" class="card-view">查看</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- self_reported -->
+          <article class="work-card is-self" aria-label="自荐上传作品">
+            <div class="thumb" aria-hidden="true">
+              <div class="thumb-ico">
+                <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+              </div>
+            </div>
+            <div class="card-body">
+              <span class="badge badge-self" title="self_reported">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.6 L10.6 10.2 H1.4 Z"/><path d="M6 4.6v2.4M6 8.6h.01"/></svg>
+                自荐上传 · 低信任
+              </span>
+              <h3 class="card-title">设计出图样例合集</h3>
+              <p class="helper">由服务方自行上传，未经成单验证</p>
+              <div class="card-meta">
+                <span class="card-date">2026-07-09</span>
+                <button type="button" class="card-view">查看</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- curated -->
+          <article class="work-card is-curated" aria-label="平台精选作品">
+            <div class="thumb" aria-hidden="true">
+              <div class="thumb-ico">
+                <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+              </div>
+            </div>
+            <div class="card-body">
+              <span class="badge badge-curated" title="curated">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4l1.4 2.9 3.2.4-2.3 2.2.6 3.2L6 8.5 3.1 10.1l.6-3.2L1.4 4.7l3.2-.4z"/></svg>
+                平台精选
+              </span>
+              <h3 class="card-title">基础设施运维手册摘录</h3>
+              <p class="helper">平台抽检精选</p>
+              <div class="card-meta">
+                <span class="card-date">2026-08-02</span>
+                <button type="button" class="card-view">查看</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="legend" aria-label="Badge 图例">
+          <div class="legend-item">
+            <span class="legend-key">verified_order</span>
+            <span class="badge badge-verified"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.2l4.2 1.6v3.1c0 2.4-1.7 3.9-4.2 4.9C3.5 9.8 1.8 8.3 1.8 5.9V2.8L6 1.2z"/><path d="M3.8 5.9l1.5 1.5 2.9-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>成单验证</span>
+            <p class="legend-desc">盾形 + 勾 · 高信任绿 · 实线边框</p>
+          </div>
+          <div class="legend-item">
+            <span class="legend-key">self_reported</span>
+            <span class="badge badge-self"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.6 L10.6 10.2 H1.4 Z"/><path d="M6 4.6v2.4M6 8.6h.01"/></svg>自荐上传 · 低信任</span>
+            <p class="legend-desc">三角警示 · 琥珀弱化 · 虚线边框/洗色</p>
+          </div>
+          <div class="legend-item">
+            <span class="legend-key">curated</span>
+            <span class="badge badge-curated"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4l1.4 2.9 3.2.4-2.3 2.2.6 3.2L6 8.5 3.1 10.1l.6-3.2L1.4 4.7l3.2-.4z"/></svg>平台精选</span>
+            <p class="legend-desc">星形 · 石板描边 · 非「官方认证」</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="col" aria-label="作品栏列表">
+        <div class="col-head">
+          <h2>作品</h2>
+          <p>3 条已授权公开 · 访客视图</p>
+        </div>
+        <div class="col-list">
+          <div class="list-card">
+            <div class="list-thumb" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+            </div>
+            <div class="list-body">
+              <div class="list-title">代码审查交付摘要 · PR #482</div>
+              <span class="badge badge-verified sm"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.2l4.2 1.6v3.1c0 2.4-1.7 3.9-4.2 4.9C3.5 9.8 1.8 8.3 1.8 5.9V2.8L6 1.2z"/><path d="M3.8 5.9l1.5 1.5 2.9-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>成单验证</span>
+              <div class="list-foot">
+                <span class="list-date">2026-08-21</span>
+                <button type="button" class="list-view">查看</button>
+              </div>
+            </div>
+          </div>
+          <div class="list-card is-self">
+            <div class="list-thumb" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+            </div>
+            <div class="list-body">
+              <div class="list-title">设计出图样例合集</div>
+              <span class="badge badge-self sm"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.6 L10.6 10.2 H1.4 Z"/><path d="M6 4.6v2.4M6 8.6h.01"/></svg>自荐上传 · 低信任</span>
+              <div class="list-foot">
+                <span class="list-date">2026-07-09</span>
+                <button type="button" class="list-view">查看</button>
+              </div>
+            </div>
+          </div>
+          <div class="list-card is-curated">
+            <div class="list-thumb" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 3.5V2.8a2.5 2.5 0 0 1 5 0v.7"/></svg>
+            </div>
+            <div class="list-body">
+              <div class="list-title">基础设施运维手册摘录</div>
+              <span class="badge badge-curated sm"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4l1.4 2.9 3.2.4-2.3 2.2.6 3.2L6 8.5 3.1 10.1l.6-3.2L1.4 4.7l3.2-.4z"/></svg>平台精选</span>
+              <div class="list-foot">
+                <span class="list-date">2026-08-02</span>
+                <button type="button" class="list-view">查看</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-foot">浏览作品不等于雇佣；发单请使用下方发单区</div>
+      </aside>
+    </div>
+  </div>
+</div>
+</body>
+</html>
