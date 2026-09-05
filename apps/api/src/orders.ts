@@ -6,6 +6,8 @@ import {
   type ConfirmPayload,
   type Order,
   type OrderStatus,
+  type PortfolioConsent,
+  type PortfolioItem,
 } from "@agent-gig/shared";
 import { getDb, nowIso, saveDb, uid } from "./store.js";
 import { audit } from "./audit.js";
@@ -337,7 +339,8 @@ export function acceptOrder(
   orderId: string,
   userId: string,
   decision: "satisfied" | "reject" | "revise",
-  note?: string
+  note?: string,
+  consentInput?: { publicPortfolio?: boolean; homepage?: boolean }
 ): Order {
   const order = mustOrder(orderId);
   if (order.parties.hirerUserId !== userId) {
@@ -409,6 +412,16 @@ export function acceptOrder(
   setStatus(order, "accepted_done");
   releaseEscrow(order);
   setStatus(order, "released");
+
+  // V0.5-S2: consent defaults BOTH false — never server-default true
+  const decidedAt = nowIso();
+  const consent: PortfolioConsent = {
+    publicPortfolio: consentInput?.publicPortfolio === true,
+    homepage: consentInput?.homepage === true,
+    decidedAt,
+  };
+  order.portfolioConsent = consent;
+
   audit({
     actorRole: "user",
     actorId: userId,
@@ -416,9 +429,103 @@ export function acceptOrder(
     orderId,
     amount: order.pricing.feeCap,
     counterpart: order.parties.providerId,
+    detail: { portfolioConsent: consent },
   });
+  audit({
+    actorRole: "user",
+    actorId: userId,
+    action: "portfolio.consent",
+    orderId,
+    counterpart: order.parties.providerAgentId,
+    detail: { ...consent, source: "acceptance" },
+  });
+
+  // verified_order only when released AND (publicPortfolio OR homepage)
+  if (consent.publicPortfolio || consent.homepage) {
+    createVerifiedPortfolioItem(order, consent);
+  }
+
   saveDb();
   return order;
+}
+
+/** Create verified_order PortfolioItem from a released order (internal). */
+export function createVerifiedPortfolioItem(order: Order, consent: PortfolioConsent): PortfolioItem {
+  const db = getDb();
+  // Idempotent: one verified item per order
+  const existing = Object.values(db.portfolio).find(
+    (i) => i.source === "verified_order" && i.orderId === order.orderId
+  );
+  if (existing) {
+    existing.consent = { ...consent };
+    existing.updatedAt = nowIso();
+    return existing;
+  }
+  const summary =
+    typeof order.deliveryPayload?.reportMarkdown === "string"
+      ? String(order.deliveryPayload.reportMarkdown).slice(0, 280)
+      : order.task.summary;
+  const item: PortfolioItem = {
+    itemId: uid("pi"),
+    did: order.parties.providerAgentId,
+    source: "verified_order",
+    orderId: order.orderId,
+    summary,
+    media: [],
+    consent: { ...consent },
+    moderationStatus: "visible",
+    lowTrust: false,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  };
+  db.portfolio[item.itemId] = item;
+  return item;
+}
+
+/** Post-release consent update: create/update verified item or leave none if both false. */
+export function setOrderPortfolioConsent(
+  orderId: string,
+  userId: string,
+  input: { publicPortfolio?: boolean; homepage?: boolean }
+): { order: Order; item: PortfolioItem | null } {
+  const order = mustOrder(orderId);
+  if (order.parties.hirerUserId !== userId) {
+    throw new HttpError(403, "Only hirer user can set portfolio consent");
+  }
+  if (order.status !== "released") {
+    throw new HttpError(409, `Consent only after released (now ${order.status})`);
+  }
+  const decidedAt = nowIso();
+  const consent: PortfolioConsent = {
+    publicPortfolio: input.publicPortfolio === true,
+    homepage: input.homepage === true,
+    decidedAt,
+  };
+  order.portfolioConsent = consent;
+  audit({
+    actorRole: "user",
+    actorId: userId,
+    action: "portfolio.consent",
+    orderId,
+    counterpart: order.parties.providerAgentId,
+    detail: { ...consent, source: "post_release" },
+  });
+  let item: PortfolioItem | null = null;
+  if (consent.publicPortfolio || consent.homepage) {
+    item = createVerifiedPortfolioItem(order, consent);
+  } else {
+    // If previously created and now both false, revoke public flags on existing
+    const existing = Object.values(getDb().portfolio).find(
+      (i) => i.source === "verified_order" && i.orderId === order.orderId
+    );
+    if (existing) {
+      existing.consent = { ...consent, revokedAt: existing.consent.revokedAt };
+      existing.updatedAt = nowIso();
+      item = existing;
+    }
+  }
+  saveDb();
+  return { order, item };
 }
 
 /** Optional provider ack if order sits in revision_requested (two-step); S1 auto-accept usually skips this. */

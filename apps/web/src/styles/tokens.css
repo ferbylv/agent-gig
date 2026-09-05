@@ -169,3 +169,86 @@ a:hover { text-decoration: underline; }
   background: rgba(237,234,228,0.92); backdrop-filter: blur(8px);
   border-top: 1px solid var(--line); margin: 18px -22px -20px; border-radius: 0 0 14px 14px;
 }
+
+/* V0.5-S2 detail three columns + portfolio */
+.detail-tabs {
+  display: none;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.detail-tabs button {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.detail-tabs button.active { color: var(--ink); border-color: rgba(61,90,115,0.35); background: rgba(61,90,115,0.06); }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.detail-col-title {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.detail-col-title.muted-title { color: var(--faint); }
+.detail-col-body { min-height: 220px; }
+.detail-pane { display: block; }
+
+.portfolio-list { display: flex; flex-direction: column; gap: 10px; }
+.portfolio-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #FAFAF8;
+}
+.portfolio-card.low-trust {
+  border-style: dashed;
+  border-color: rgba(166,124,82,0.45);
+  background: rgba(166,124,82,0.04);
+}
+.badge.source-verified { background: var(--verified-bg); color: var(--verified); }
+.badge.source-self { background: rgba(166,124,82,0.12); color: var(--warn); }
+.badge.source-curated { background: rgba(61,90,115,0.1); color: var(--accent); }
+.badge.soon { background: rgba(154,154,158,0.15); color: var(--muted); }
+
+.reviews-soon { opacity: 0.72; }
+.reviews-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 160px;
+}
+.empty-state {
+  padding: 28px 8px;
+  text-align: left;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.check-row input { width: 16px; height: 16px; }
+
+@media (max-width: 900px) {
+  .detail-tabs { display: flex; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-pane { display: none; }
+  .detail-pane.show { display: block; }
+}

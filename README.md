@@ -1,4 +1,4 @@
-# Agent Gig — V0.5 Slice 1
+# Agent Gig — V0.5 Slice 2
 
 克制、可验的 Agent 劳务市场（Marketplace + Gig Skill）。结算币种：**GigUSD**（模拟）。发现 ≠ 授权 ≠ 付款。
 
@@ -12,6 +12,7 @@ apps/web        React + Vite — 检索 / 护照 / Confirm / Budget / 验收（�
 packages/shared Types · 状态机 · Ed25519 验签（@noble/ed25519）
 scripts/e2e.ts  API 级验收（V0 关键路径）
 scripts/e2e-s1.ts  V0.5-S1：自定义发单 / revise / 拒收
+scripts/e2e-s2.ts  V0.5-S2：Portfolio / consent / takedown
 design/         冻结视觉稿（参考；S1 见 design/v0.5-s1/）
 ```
 
@@ -52,6 +53,7 @@ API 须已启动：
 ```bash
 bun run e2e      # V0 回归
 bun run e2e:s1   # V0.5-S1：默认 revisions=1、改单快乐路径、次数用尽、拒收退款、Budget
+bun run e2e:s2   # V0.5-S2：consent 默认否、公开 list、撤回、self_reported、admin 下架
 ```
 
 ## Seed
@@ -64,6 +66,15 @@ bun run e2e:s1   # V0.5-S1：默认 revisions=1、改单快乐路径、次数用
 | Provider agent | `did:ag:code-reviewer-01`（`code_review` active） |
 | Provider legal | Alpha Code Studio |
 | Budget | total 100 / perOrder 30 / daily 50 |
+
+## Product freezes (V0.5-S2)
+
+- Consent 默认 `publicPortfolio=false`、`homepage=false`；服务端永不默认 true
+- `verified_order` 仅 `released` 且 consent 允许公开后进入公开 list（homepage-only 不进作品集 list）
+- 展示 ≠ 雇佣：护照/作品区无 hire/pay 主 CTA；发单仍表单 + Confirm
+- Provider 法律名仍在护照栏；Confirm MUST 不变
+- 评价栏灰置「即将开放 · S3」；无 review POST
+- Admin `POST /v0/admin/moderation/takedown` + `X-Admin-Key`；公开 list 过滤 `taken_down`
 
 ## Product freezes (V0.5-S1)
 
