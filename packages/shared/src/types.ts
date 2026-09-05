@@ -134,6 +134,8 @@ export interface Order {
   riskFlags?: string[];
   /** Optional note from last revise request */
   revisionNote?: string;
+  /** Set on acceptance.satisfied (V0.5-S2); defaults both false */
+  portfolioConsent?: PortfolioConsent;
 }
 
 export interface ConfirmPayload {
@@ -206,3 +208,64 @@ export interface ConnectBinding {
 
 export const TAKE_RATE_BPS = 1000; // 10%
 export const ADMIN_KEY_DEFAULT = "dev-admin-key-v0";
+
+/** Portfolio / consent (V0.5-S2) */
+export const PORTFOLIO_SOURCES = ["verified_order", "self_reported", "curated"] as const;
+export type PortfolioSource = (typeof PORTFOLIO_SOURCES)[number];
+
+export const MODERATION_STATUSES = ["visible", "taken_down", "pending"] as const;
+export type ModerationStatus = (typeof MODERATION_STATUSES)[number];
+
+export interface PortfolioConsent {
+  publicPortfolio: boolean;
+  homepage: boolean;
+  decidedAt: string;
+  revokedAt?: string;
+}
+
+export interface PortfolioMedia {
+  url: string;
+  kind?: "image" | "link" | "text";
+  caption?: string;
+}
+
+export interface PortfolioItem {
+  itemId: string;
+  did: string;
+  source: PortfolioSource;
+  orderId?: string;
+  summary: string;
+  media: PortfolioMedia[];
+  consent: PortfolioConsent;
+  moderationStatus: ModerationStatus;
+  /** Low-trust hint for self_reported (always true for that source) */
+  lowTrust?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  takedownReason?: string;
+}
+
+/** Defaults: never server-default true */
+export function defaultPortfolioConsent(decidedAt: string): PortfolioConsent {
+  return {
+    publicPortfolio: false,
+    homepage: false,
+    decidedAt,
+  };
+}
+
+export function isPortfolioSource(v: unknown): v is PortfolioSource {
+  return typeof v === "string" && (PORTFOLIO_SOURCES as readonly string[]).includes(v);
+}
+
+export function isModerationStatus(v: unknown): v is ModerationStatus {
+  return typeof v === "string" && (MODERATION_STATUSES as readonly string[]).includes(v);
+}
+
+/** Public list visibility: consent allows publicPortfolio, not revoked, moderation visible */
+export function isPubliclyVisiblePortfolioItem(item: PortfolioItem): boolean {
+  if (item.moderationStatus !== "visible") return false;
+  if (!item.consent.publicPortfolio) return false;
+  if (item.consent.revokedAt) return false;
+  return true;
+}

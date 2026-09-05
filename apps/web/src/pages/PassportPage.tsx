@@ -3,10 +3,24 @@ import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import ConfirmModal from "../components/ConfirmModal";
 
+function sourceBadge(source: string) {
+  if (source === "verified_order") {
+    return { cls: "badge source-verified", text: "成单验证", title: "经平台成单验收并获授权" };
+  }
+  if (source === "self_reported") {
+    return { cls: "badge source-self", text: "自荐上传 · 低信任", title: "由服务方自行上传，未经成单验证" };
+  }
+  if (source === "curated") {
+    return { cls: "badge source-curated", text: "平台精选", title: "平台抽检精选" };
+  }
+  return { cls: "badge", text: source, title: source };
+}
+
 export default function PassportPage() {
   const { did: raw } = useParams();
   const did = decodeURIComponent(raw ?? "");
   const [data, setData] = useState<any>(null);
+  const [portfolio, setPortfolio] = useState<any[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [order, setOrder] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -16,11 +30,16 @@ export default function PassportPage() {
   const [taskSummary, setTaskSummary] = useState("审查 demo-repo PR #42：安全与可读性");
   const [feeCap, setFeeCap] = useState("20");
   const [slaHours, setSlaHours] = useState("48");
+  const [tab, setTab] = useState<"passport" | "portfolio" | "reviews">("passport");
+
+  async function load() {
+    const listing = await api(`/v0/listings/${encodeURIComponent(did)}`);
+    setData(listing);
+    setPortfolio(listing.portfolio ?? []);
+  }
 
   useEffect(() => {
-    api(`/v0/passports/${encodeURIComponent(did)}`)
-      .then(setData)
-      .catch((e) => setErr(e.message));
+    load().catch((e) => setErr(e.message));
   }, [did]);
 
   if (err) {
@@ -65,7 +84,6 @@ export default function PassportPage() {
       setFormErr("交付时限须为正数小时");
       return;
     }
-    // S1 freeze: revisions fixed at 1 (API also clamps to REVISIONS_MAX)
     const revs = 1;
     setBusy(true);
     try {
@@ -95,16 +113,13 @@ export default function PassportPage() {
     }
   }
 
-  return (
-    <div className="grid2">
-      <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <span className={`badge ${badge.cls}`}>{badge.text}</span>
-            <h1 className="h1" style={{ marginTop: 10 }}>{p.displayName}</h1>
-            <p className="muted">{p.tagline}</p>
-          </div>
-        </div>
+  const passportCol = (
+    <div className="detail-col">
+      <div className="detail-col-title">护照</div>
+      <div className="card detail-col-body">
+        <span className={`badge ${badge.cls}`}>{badge.text}</span>
+        <h1 className="h1" style={{ marginTop: 10 }}>{p.displayName}</h1>
+        <p className="muted">{p.tagline}</p>
         <div style={{ marginTop: 16 }}>
           <div className="faint">DID</div>
           <code style={{ fontSize: 12 }}>{p.did}</code>
@@ -139,11 +154,74 @@ export default function PassportPage() {
           <Link className="btn" to="/search">返回检索</Link>
         </div>
         <p className="faint" style={{ marginTop: 16 }}>
-          名片 ≠ 授权 ≠ 付款。本卡<strong>无雇佣/付款主按钮</strong>。发单请用右侧表单（走 Budget + Confirm）。
+          名片 ≠ 授权 ≠ 付款。本卡<strong>无雇佣/付款主按钮</strong>。浏览作品不等于雇佣；发单请使用下方发单区。
         </p>
       </div>
+    </div>
+  );
 
-      <div className="card">
+  const portfolioCol = (
+    <div className="detail-col">
+      <div className="detail-col-title">作品</div>
+      <div className="card detail-col-body">
+        {portfolio.length === 0 ? (
+          <div className="empty-state">
+            <p className="muted" style={{ margin: 0 }}>还没有获授权的公开作品</p>
+            <p className="faint" style={{ marginTop: 8 }}>成单并授权后将出现在此。默认不公开。</p>
+          </div>
+        ) : (
+          <div className="portfolio-list">
+            {portfolio.map((item: any) => {
+              const b = sourceBadge(item.source);
+              return (
+                <article key={item.itemId} className={`portfolio-card ${item.source === "self_reported" ? "low-trust" : ""}`}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                    <span className={b.cls} title={b.title}>{b.text}</span>
+                    <span className="faint">{item.createdAt?.slice(0, 10)}</span>
+                  </div>
+                  <p style={{ margin: "10px 0 0", fontSize: 14 }}>{item.summary}</p>
+                  {item.orderId && <p className="faint" style={{ marginTop: 6 }}>关联订单 {item.orderId}</p>}
+                  {item.source === "self_reported" && (
+                    <p className="faint" style={{ marginTop: 6 }}>由服务方自行上传，未经成单验证</p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+        <p className="faint" style={{ marginTop: 14 }}>作品区无付款主按钮；雇佣请走下方表单 + Confirm。</p>
+      </div>
+    </div>
+  );
+
+  const reviewsCol = (
+    <div className="detail-col">
+      <div className="detail-col-title muted-title">评价</div>
+      <div className="card detail-col-body reviews-soon">
+        <div className="reviews-placeholder">
+          <span className="badge soon">即将开放 · S3</span>
+          <p className="muted" style={{ marginTop: 12 }}>评价与完成率将在下一版本开放（S3）</p>
+          <p className="faint">本栏为占位，不可打分、不可提交评价。</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="detail-tabs" role="tablist" aria-label="详情分栏">
+        <button type="button" className={tab === "passport" ? "active" : ""} onClick={() => setTab("passport")} role="tab" aria-selected={tab === "passport"}>护照</button>
+        <button type="button" className={tab === "portfolio" ? "active" : ""} onClick={() => setTab("portfolio")} role="tab" aria-selected={tab === "portfolio"}>作品</button>
+        <button type="button" className={tab === "reviews" ? "active" : ""} onClick={() => setTab("reviews")} role="tab" aria-selected={tab === "reviews"}>评价</button>
+      </div>
+
+      <div className="detail-grid">
+        <div className={tab === "passport" ? "detail-pane show" : "detail-pane"}>{passportCol}</div>
+        <div className={tab === "portfolio" ? "detail-pane show" : "detail-pane"}>{portfolioCol}</div>
+        <div className={tab === "reviews" ? "detail-pane show" : "detail-pane"}>{reviewsCol}</div>
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
         <h2 className="h2">发起雇佣</h2>
         <p className="muted" style={{ marginTop: 0 }}>
           起价 {p.pricing?.models?.[0]?.price ?? "—"} GigUSD / 次。提交后将校验额度，并向主人弹出确认门；未确认不锁仓。

@@ -12,7 +12,9 @@
     "seed": "bun run --filter @agent-gig/api seed",
     "e2e": "bun run scripts/e2e.ts",
     "start:api": "bun run --filter @agent-gig/api start",
-    "e2e:s1": "bun run scripts/e2e-s1.ts"
+    "e2e:s1": "bun run scripts/e2e-s1.ts",
+    "e2e:s2": "bun run scripts/e2e-s2.ts",
+    "test:shared": "bun test packages/shared/src/portfolio.test.ts"
   },
   "packageManager": "bun@1.4.0"
 }

@@ -13,7 +13,7 @@ export default function App() {
     <div className="shell">
       <div className="topnav">
         <Link to="/" className="brand">
-          Agent Gig <span>劳务市场 · V0</span>
+          Agent Gig <span>劳务市场 · V0.5</span>
         </Link>
         <nav>
           <NavLink to="/search">检索</NavLink>

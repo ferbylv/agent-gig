@@ -32,7 +32,23 @@ passportRoutes.get("/listings/:did", async (c) => {
   const p = getDb().passports[did];
   if (!p) return c.json({ error: "Not found" }, 404);
   const verified = await verifyPassport(p as unknown as Record<string, unknown>);
-  return c.json({ listing: p, passport: p, verified, uris: shortUri(did) });
+  const { isPubliclyVisiblePortfolioItem } = await import("@agent-gig/shared");
+  const portfolio = Object.values(getDb().portfolio ?? {})
+    .filter((i) => i.did === did && isPubliclyVisiblePortfolioItem(i))
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    .map((i) => ({
+      ...i,
+      lowTrust: i.source === "self_reported" ? true : i.lowTrust ?? false,
+    }));
+  return c.json({
+    listing: p,
+    passport: p,
+    verified,
+    uris: shortUri(did),
+    portfolio,
+    reviews: [],
+    reviewsComingSoon: true,
+  });
 });
 
 passportRoutes.get("/passports/:did", async (c) => {

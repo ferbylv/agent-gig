@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — S2 Detail Narrow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 28px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 28px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+
+  .phone-frame {
+    width: 418px;
+    height: 848px;
+    padding: 12px 12px 14px;
+    background: #F5F3EE;
+    border: 1px solid rgba(28,28,30,0.10);
+    border-radius: 30px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.07);
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-notch {
+    width: 72px; height: 4px;
+    background: rgba(28,28,30,0.12);
+    border-radius: 999px;
+    margin: 2px auto 8px;
+    flex-shrink: 0;
+  }
+
+  .app {
+    width: 390px;
+    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(28,28,30,0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app-top {
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 0 14px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .app-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .brand-mark {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .app-meta {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9A9A9E;
+  }
+
+  .tabs {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    padding: 8px 10px 0;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+    background: #FFF;
+  }
+  .tab {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #9A9A9E;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active {
+    color: #1C1C1E;
+    border-bottom-color: #3D5A73;
+  }
+  .tab.disabled {
+    color: #C0C0C4;
+    font-weight: 550;
+  }
+  .tab .mini {
+    font-size: 9px;
+    font-weight: 650;
+    color: #9A9A9E;
+    background: rgba(28,28,30,0.05);
+    border-radius: 999px;
+    padding: 1px 5px;
+  }
+
+  .app-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 10px 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .passport {
+    background: #FBFBF9;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 12px 12px 10px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .badge-verified {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    padding: 0 7px 0 5px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .badge-verified svg {
+    width: 10px; height: 10px;
+    stroke: #3D7A5F; fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .provider { margin-bottom: 6px; padding-right: 72px; }
+  .provider-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 2px;
+  }
+  .provider-row {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .provider-name {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1C1C1E;
+  }
+  .provider-type {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6B6B70;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 999px;
+    padding: 1px 6px;
+  }
+  .display-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 2px;
+  }
+  .tagline {
+    font-size: 11px;
+    color: #6B6B70;
+    line-height: 1.35;
+    margin-bottom: 7px;
+  }
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 7px;
+  }
+  .skill {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #3D5A73;
+    background: rgba(61,90,115,0.08);
+    border: 1px solid rgba(61,90,115,0.12);
+    border-radius: 999px;
+    padding: 2px 7px;
+  }
+  .pricing {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1C1C1E;
+    margin-bottom: 7px;
+  }
+  .pricing .unit {
+    font-weight: 500;
+    color: #6B6B70;
+    font-size: 11px;
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 7px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 7px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #9A9A9E;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-row .value { color: #6B6B70; font-weight: 500; }
+  .perm-block {
+    padding-top: 7px;
+    border-top: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 7px;
+  }
+  .perm-label {
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9A9A9E;
+    margin-bottom: 5px;
+  }
+  .perm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 550;
+  }
+  .chip.allow {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.16);
+  }
+  .chip.deny {
+    background: rgba(184,92,92,0.08);
+    color: #B85C5C;
+    border: 1px solid rgba(184,92,92,0.16);
+  }
+  .chip .mark { font-size: 9px; font-weight: 700; opacity: 0.85; }
+  .passport-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+  }
+  .status-pill .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .quiet-link {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #6B6B70;
+    border-bottom: 1px solid rgba(107,107,112,0.35);
+    padding-bottom: 1px;
+  }
+
+  .works-panel {
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 10px;
+    padding: 10px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .works-helper {
+    font-size: 10.5px;
+    color: #9A9A9E;
+    line-height: 1.4;
+    padding: 7px 8px;
+    background: rgba(28,28,30,0.03);
+    border: 1px solid rgba(28,28,30,0.06);
+    border-radius: 8px;
+  }
+  .work-card {
+    background: #FBFBF9;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 8px;
+    padding: 9px 10px;
+    display: flex;
+    gap: 9px;
+  }
+  .work-thumb {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 650;
+    border: 1px solid rgba(28,28,30,0.08);
+  }
+  .work-thumb.v { background: rgba(61,122,95,0.10); color: #3D7A5F; }
+  .work-thumb.s { background: rgba(28,28,30,0.04); color: #6B6B70; }
+  .work-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1C1C1E;
+    margin-bottom: 2px;
+    line-height: 1.3;
+  }
+  .work-summary {
+    font-size: 10.5px;
+    color: #6B6B70;
+    line-height: 1.35;
+    margin-bottom: 5px;
+  }
+  .src-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+  .src-badge.verified {
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    border: 1px solid rgba(61,122,95,0.18);
+  }
+  .src-badge.self {
+    background: rgba(28,28,30,0.04);
+    color: #6B6B70;
+    border: 1px dashed rgba(28,28,30,0.22);
+  }
+
+  .reviews-panel {
+    background: #F5F4F1;
+    border: 1px solid rgba(28,28,30,0.06);
+    border-radius: 10px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    opacity: 0.95;
+    flex-shrink: 0;
+  }
+  .reviews-panel .soon {
+    display: inline-flex;
+    height: 20px;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(28,28,30,0.05);
+    color: #9A9A9E;
+    border: 1px solid rgba(28,28,30,0.08);
+  }
+  .reviews-panel .copy {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9A9A9E;
+    line-height: 1.45;
+  }
+  .reviews-panel .title {
+    font-size: 12px;
+    font-weight: 650;
+    color: #9A9A9E;
+    letter-spacing: 0.04em;
+  }
+
+  .app-footer {
+    flex-shrink: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid rgba(28,28,30,0.06);
+    font-size: 10px;
+    font-weight: 500;
+    color: #9A9A9E;
+    padding: 0 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="desk-label"><strong>Agent Gig</strong> · V0.5 S2 · D-S2-1 · 窄屏</div>
+    <div class="desk-meta">~390 · tabs 护照/作品/评价</div>
+
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="app" role="application" aria-label="Agent Gig 详情窄屏">
+        <header class="app-top">
+          <div class="app-title">
+            <span class="brand-mark">AG</span>
+            Agent Gig
+          </div>
+          <div class="app-meta">护照详情</div>
+        </header>
+
+        <nav class="tabs" aria-label="三栏切换">
+          <div class="tab">护照</div>
+          <div class="tab active">作品</div>
+          <div class="tab disabled">评价 <span class="mini">S3</span></div>
+        </nav>
+
+        <div class="app-scroll">
+          <!-- Compact passport strip -->
+          <article class="passport" aria-label="护照">
+            <div class="badge-verified">
+              <svg viewBox="0 0 12 12"><polyline points="2,6.5 4.5,9 10,3"/></svg>
+              已验签
+            </div>
+            <div class="provider">
+              <div class="provider-label">结算主体</div>
+              <div class="provider-row">
+                <span class="provider-name">北湾工作室</span>
+                <span class="provider-type">工作室</span>
+              </div>
+            </div>
+            <h1 class="display-name">CodeReviewer</h1>
+            <p class="tagline">PR 审查与风险标注，不直接 push</p>
+            <div class="skills">
+              <span class="skill">代码审查</span>
+              <span class="skill">安全扫描</span>
+            </div>
+            <div class="pricing">15 GigUSD <span class="unit">· 按次</span></div>
+            <div class="meta">
+              <div class="meta-row">
+                <span>DID</span>
+                <span class="value">did:gig:7a3f…c21</span>
+              </div>
+            </div>
+            <div class="perm-block">
+              <div class="perm-label">权限需求</div>
+              <div class="perm-chips">
+                <span class="chip allow"><span class="mark">允</span>读取 diff</span>
+                <span class="chip deny"><span class="mark">禁</span>push</span>
+                <span class="chip deny"><span class="mark">禁</span>持有私钥</span>
+              </div>
+            </div>
+            <div class="passport-foot">
+              <span class="status-pill"><span class="dot"></span>接单中</span>
+              <a class="quiet-link" href="#">发起雇佣（表单）</a>
+            </div>
+          </article>
+
+          <!-- Works (active tab content) -->
+          <div class="works-panel" aria-label="作品">
+            <p class="works-helper">浏览作品不等于雇佣；发单请使用发单区</p>
+            <article class="work-card">
+              <div class="work-thumb v">验</div>
+              <div>
+                <h3 class="work-title">acme/api#482 鉴权改动审查</h3>
+                <p class="work-summary">经成单验收并获授权公开。</p>
+                <span class="src-badge verified">✓ 成单验证</span>
+              </div>
+            </article>
+            <article class="work-card">
+              <div class="work-thumb s">自</div>
+              <div>
+                <h3 class="work-title">常见 PR 风险检查清单</h3>
+                <p class="work-summary">自行上传，未经成单验证。</p>
+                <span class="src-badge self">! 自荐上传 · 低信任</span>
+              </div>
+            </article>
+          </div>
+
+          <!-- Reviews grayed -->
+          <div class="reviews-panel" aria-label="评价" aria-disabled="true">
+            <div class="title">评价</div>
+            <span class="soon">即将开放 · S3</span>
+            <p class="copy">评价与完成率将在下一版本开放（S3）</p>
+          </div>
+        </div>
+
+        <footer class="app-footer">展示 ≠ 雇佣 · 无付款主 CTA</footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -154,15 +154,42 @@ orderRoutes.post("/orders/:id/acceptance", async (c) => {
       decision: "satisfied" | "reject" | "revise";
       userId?: string;
       note?: string;
+      consent?: { publicPortfolio?: boolean; homepage?: boolean };
     }>();
     const order = acceptOrder(
       c.req.param("id"),
       body.userId ?? SEED.userId,
       body.decision,
-      body.note
+      body.note,
+      body.consent
     );
     const escrow = order.escrowId ? getDb().escrows[order.escrowId] : null;
-    return c.json({ order, escrow });
+    const portfolioItem =
+      body.decision === "satisfied"
+        ? Object.values(getDb().portfolio).find(
+            (i) => i.source === "verified_order" && i.orderId === order.orderId
+          ) ?? null
+        : null;
+    return c.json({ order, escrow, portfolioItem, portfolioConsent: order.portfolioConsent ?? null });
+  } catch (e) {
+    return handleErr(c, e);
+  }
+});
+
+/** Post-release consent (optional follow-up after 暂不公开) */
+orderRoutes.post("/orders/:id/portfolio-consent", async (c) => {
+  try {
+    const { setOrderPortfolioConsent } = await import("../orders.js");
+    const body = await c.req.json<{
+      userId?: string;
+      publicPortfolio?: boolean;
+      homepage?: boolean;
+    }>();
+    const result = setOrderPortfolioConsent(c.req.param("id"), body.userId ?? SEED.userId, {
+      publicPortfolio: body.publicPortfolio,
+      homepage: body.homepage,
+    });
+    return c.json(result);
   } catch (e) {
     return handleErr(c, e);
   }

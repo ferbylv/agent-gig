@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 作品栏空态</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.08),
+      0 32px 64px rgba(28,28,30,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .provider {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6B6B70;
+  }
+  .cols {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 280px 1fr 260px;
+    background: #F7F5F1;
+  }
+  .col {
+    background: #FFF;
+    border-right: 1px solid rgba(28,28,30,0.06);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .col:last-child { border-right: none; }
+  .col-head {
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    border-bottom: 1px solid rgba(28,28,30,0.06);
+  }
+  .col-head h2 {
+    font-size: 13.5px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .col-soon {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9A9A9E;
+    background: rgba(28,28,30,0.05);
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .col-body { flex: 1; min-height: 0; padding: 16px; }
+  .ghost-block {
+    height: 72px;
+    border-radius: 10px;
+    background: rgba(28,28,30,0.04);
+    border: 1px solid rgba(28,28,30,0.05);
+    margin-bottom: 10px;
+  }
+  .ghost-block.tall { height: 120px; }
+  .ghost-line {
+    height: 10px;
+    border-radius: 4px;
+    background: rgba(28,28,30,0.06);
+    margin-bottom: 8px;
+  }
+  .ghost-line.w60 { width: 60%; }
+  .ghost-line.w40 { width: 40%; }
+  .muted-col {
+    opacity: 0.55;
+    filter: grayscale(0.15);
+  }
+  .muted-col .col-head h2 { color: #6B6B70; }
+
+  /* Empty works */
+  .works-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px 28px 40px;
+  }
+  .empty-ico {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(28,28,30,0.12);
+    background: #F7F5F1;
+    display: grid;
+    place-items: center;
+    margin-bottom: 18px;
+    color: #9A9A9E;
+  }
+  .empty-ico svg {
+    width: 20px; height: 20px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .empty-title {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #1C1C1E;
+    margin-bottom: 8px;
+  }
+  .empty-helper {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.55;
+    max-width: 280px;
+  }
+  .hint {
+    margin-top: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    line-height: 1.45;
+    max-width: 260px;
+  }
+  .shell-foot {
+    height: 56px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(28,28,30,0.07);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 12.5px;
+    color: #9A9A9E;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="desk-label"><strong>Agent Gig</strong> · 详情 · 作品栏空态</div>
+  <div class="desk-meta">D-S2-4 · Empty · 无支付 CTA</div>
+
+  <div class="shell">
+    <div class="shell-top">
+      <div class="shell-title">
+        <span class="brand-mark">AG</span>
+        Agent CodeReviewer
+      </div>
+      <div class="provider">北湾工作室 · provider 主体</div>
+    </div>
+
+    <div class="cols">
+      <section class="col" aria-label="护照">
+        <div class="col-head"><h2>护照</h2></div>
+        <div class="col-body">
+          <div class="ghost-block tall"></div>
+          <div class="ghost-line"></div>
+          <div class="ghost-line w60"></div>
+          <div class="ghost-line w40"></div>
+          <div class="ghost-block" style="margin-top:16px"></div>
+        </div>
+      </section>
+
+      <section class="col" aria-label="作品" style="background:#FFF">
+        <div class="col-head"><h2>作品</h2><span style="font-size:12px;color:#9A9A9E;font-weight:500">0 条公开</span></div>
+        <div class="works-empty" role="status">
+          <div class="empty-ico" aria-hidden="true">
+            <svg viewBox="0 0 20 20">
+              <rect x="3" y="4.5" width="14" height="11" rx="1.8"/>
+              <path d="M7 4.5V3.6a3 3 0 0 1 6 0v.9"/>
+              <path d="M7.5 10.5h5M10 8v5"/>
+            </svg>
+          </div>
+          <div class="empty-title">还没有获授权的公开作品</div>
+          <p class="empty-helper">成单并授权后将出现在此</p>
+          <p class="hint">默认不公开。浏览作品不等于雇佣。</p>
+        </div>
+      </section>
+
+      <section class="col muted-col" aria-label="评价占位">
+        <div class="col-head">
+          <h2>评价</h2>
+          <span class="col-soon">即将开放 · S3</span>
+        </div>
+        <div class="col-body">
+          <div class="ghost-block"></div>
+          <div class="ghost-line"></div>
+          <div class="ghost-line w60"></div>
+          <p style="margin-top:20px;font-size:12.5px;color:#9A9A9E;line-height:1.5">评价与完成率将在下一版本开放（S3）</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="shell-foot">发单区保持次级入口 · 本屏无「立即雇佣付款」</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Gig — 撤回公开展示</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: #EDEAE4;
+    color: #1C1C1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button { font-family: inherit; cursor: default; }
+  .desk {
+    width: 1440px; height: 900px;
+    background: #EDEAE4;
+    position: relative;
+  }
+  .desk-label {
+    position: absolute;
+    top: 40px; left: 48px;
+    font-size: 13px; font-weight: 500;
+    color: #6B6B70;
+    letter-spacing: 0.02em;
+    z-index: 3;
+  }
+  .desk-label strong { color: #1C1C1E; font-weight: 600; }
+  .desk-meta {
+    position: absolute;
+    top: 40px; right: 48px;
+    font-size: 12px; font-weight: 500;
+    color: #9A9A9E;
+    z-index: 3;
+  }
+  .host-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.42;
+    filter: saturate(0.85);
+    pointer-events: none;
+  }
+  .shell {
+    width: 1080px;
+    height: 760px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    border: 1px solid rgba(28,28,30,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell-top {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(28,28,30,0.07);
+  }
+  .shell-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .brand-mark {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: #3D5A73;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: rgba(61,122,95,0.10);
+    color: #3D7A5F;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .chip::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3D7A5F;
+  }
+  .meta { font-size: 12.5px; font-weight: 500; color: #6B6B70; }
+  .body-fill {
+    flex: 1;
+    padding: 20px 24px;
+    background: #F7F5F1;
+  }
+  .ghost-card {
+    height: 100%;
+    background: #FFF;
+    border-radius: 8px;
+    border: 1px solid rgba(28,28,30,0.06);
+    padding: 20px;
+  }
+  .ghost-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 88px;
+    gap: 14px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(28,28,30,0.08);
+    margin-bottom: 10px;
+  }
+  .ghost-thumb {
+    height: 56px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #E8E4DC, #D9D4CA);
+  }
+  .ghost-lines .l {
+    height: 10px; border-radius: 4px;
+    background: rgba(28,28,30,0.07);
+    margin-bottom: 8px;
+  }
+  .ghost-lines .l.w50 { width: 50%; }
+  .ghost-btn {
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid rgba(28,28,30,0.12);
+    background: #FFF;
+    color: #6B6B70;
+    font-size: 12px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+  }
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(28,28,30,0.32);
+    z-index: 1;
+  }
+  .modal {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    background: #FFFFFF;
+    border: 1px solid rgba(28,28,30,0.08);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgba(28,28,30,0.04),
+      0 12px 32px rgba(28,28,30,0.12),
+      0 32px 64px rgba(28,28,30,0.10);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .modal-body { padding: 28px 28px 8px; }
+  .modal-icon {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: rgba(184,92,92,0.10);
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-icon svg {
+    width: 16px; height: 16px;
+    stroke: #B85C5C;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #1C1C1E;
+    margin-bottom: 10px;
+    line-height: 1.35;
+  }
+  .modal-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B6B70;
+    line-height: 1.55;
+  }
+  .modal-note {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9A9A9E;
+    line-height: 1.45;
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(28,28,30,0.03);
+    border-radius: 8px;
+  }
+  .modal-footer {
+    padding: 20px 28px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .btn {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #6B6B70;
+    border-color: rgba(28,28,30,0.14);
+    min-width: 80px;
+  }
+  .btn-danger {
+    background: #B85C5C;
+    color: #FFFFFF;
+    min-width: 108px;
+  }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="desk-label"><strong>Agent Gig</strong> · 作品管理 · 撤回公开展示</div>
+  <div class="desk-meta">D-S2-4 · Consent withdraw</div>
+
+  <div class="host-bg" aria-hidden="true">
+    <div class="shell">
+      <div class="shell-top">
+        <div class="shell-title">
+          <div class="brand-mark">AG</div>
+          我的授权
+          <span class="chip">公开中</span>
+        </div>
+        <div class="meta">订单 #A-20481 · 代码审查交付</div>
+      </div>
+      <div class="body-fill">
+        <div class="ghost-card">
+          <div class="ghost-row">
+            <div class="ghost-thumb"></div>
+            <div class="ghost-lines"><div class="l"></div><div class="l w50"></div></div>
+            <div class="ghost-btn">撤回公开展示</div>
+          </div>
+          <div class="ghost-row">
+            <div class="ghost-thumb"></div>
+            <div class="ghost-lines"><div class="l"></div><div class="l w50"></div></div>
+            <div class="ghost-btn">撤回公开展示</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+  <div class="modal" role="dialog" aria-labelledby="wd-title" aria-modal="true">
+    <div class="modal-body">
+      <div class="modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="5.5"/>
+          <path d="M8 5v3.2M8 10.6h.01"/>
+        </svg>
+      </div>
+      <h1 class="modal-title" id="wd-title">撤回公开展示</h1>
+      <p class="modal-text">撤回后新访客将看不到该作品；默认不公开</p>
+      <p class="modal-note">已缓存页面约 24h 内可能仍可见（待确认）。作品本身与订单记录不受影响。</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary">取消</button>
+      <button type="button" class="btn btn-danger">确认撤回</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

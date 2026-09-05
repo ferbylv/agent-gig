@@ -9,6 +9,7 @@ import type {
   Order,
   PassportCard,
   Wallet,
+  PortfolioItem,
 } from "@agent-gig/shared";
 
 export interface Db {
@@ -22,6 +23,7 @@ export interface Db {
   ledger: LedgerLine[];
   audit: AuditEvent[];
   connects: Record<string, ConnectBinding>; // hirerAgentId
+  portfolio: Record<string, PortfolioItem>;
   adminKey: string;
   meta: { seededAt?: string };
 }
@@ -39,6 +41,7 @@ function emptyDb(): Db {
     ledger: [],
     audit: [],
     connects: {},
+    portfolio: {},
     adminKey: process.env.AG_ADMIN_KEY ?? "dev-admin-key-v0",
     meta: {},
   };
@@ -54,6 +57,7 @@ export function loadDb(): Db {
   try {
     if (existsSync(DATA_PATH)) {
       db = JSON.parse(readFileSync(DATA_PATH, "utf8")) as Db;
+      if (!db.portfolio) db.portfolio = {};
     } else {
       db = emptyDb();
     }

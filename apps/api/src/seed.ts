@@ -30,6 +30,7 @@ export async function seedAll(force = false): Promise<void> {
   db.ledger = [];
   db.audit = [];
   db.connects = {};
+  db.portfolio = {};
 
   const kp = await generateKeypair();
   const did = SEED.providerAgentId;
